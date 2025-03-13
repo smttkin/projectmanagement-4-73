@@ -1,357 +1,359 @@
 
 import React, { useState } from 'react';
-import Navbar from '@/components/Navbar';
+import { 
+  BarChart3, 
+  FileText, 
+  Download, 
+  Calendar, 
+  RefreshCw, 
+  Plus, 
+  Filter, 
+  ListChecks, 
+  ClipboardList
+} from 'lucide-react';
+import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
 } from '@/components/ui/card';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Download, FileDown, FileText, Filter, PlusCircle, Share2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip as RechartsTooltip, 
-  Legend,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
+} from "@/components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// Data for productivity chart
-const productivityData = [
-  { name: 'Jan', completed: 30, inProgress: 20, notStarted: 10 },
-  { name: 'Feb', completed: 25, inProgress: 30, notStarted: 15 },
-  { name: 'Mar', completed: 40, inProgress: 25, notStarted: 10 },
-  { name: 'Apr', completed: 45, inProgress: 20, notStarted: 5 },
-  { name: 'May', completed: 50, inProgress: 15, notStarted: 5 },
-  { name: 'Jun', completed: 60, inProgress: 10, notStarted: 5 },
-];
-
-// Data for workload chart
-const workloadData = [
-  { name: 'Alice', value: 12 },
-  { name: 'Bob', value: 8 },
-  { name: 'Charlie', value: 15 },
-  { name: 'Diana', value: 10 },
-  { name: 'Edward', value: 6 },
-];
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
-
-// Data for performance chart
+// Mock performance data for chart
 const performanceData = [
-  { name: 'Week 1', performance: 80 },
-  { name: 'Week 2', performance: 75 },
-  { name: 'Week 3', performance: 85 },
-  { name: 'Week 4', performance: 90 },
-  { name: 'Week 5', performance: 88 },
-  { name: 'Week 6', performance: 95 },
+  { name: 'Jan', completed: 45, pending: 15, cancelled: 5 },
+  { name: 'Feb', completed: 50, pending: 10, cancelled: 3 },
+  { name: 'Mar', completed: 40, pending: 20, cancelled: 7 },
+  { name: 'Apr', completed: 65, pending: 12, cancelled: 2 },
+  { name: 'May', completed: 55, pending: 18, cancelled: 4 },
+  { name: 'Jun', completed: 70, pending: 8, cancelled: 2 },
 ];
 
-// Sample reports list
+// Mock reports list
 const reportsList = [
-  { id: 1, name: 'Q2 Project Summary', date: '2023-06-30', type: 'quarterly' },
-  { id: 2, name: 'Marketing Campaign Results', date: '2023-05-15', type: 'campaign' },
-  { id: 3, name: 'Team Performance Review', date: '2023-06-01', type: 'performance' },
-  { id: 4, name: 'Resource Allocation Analysis', date: '2023-06-20', type: 'resource' },
-  { id: 5, name: 'Budget Utilization Report', date: '2023-06-25', type: 'financial' },
+  {
+    id: 1,
+    title: 'Q2 Project Performance',
+    description: 'Overview of all projects in Q2 2023',
+    type: 'Performance',
+    createdAt: '2023-07-01',
+    author: 'Alex Johnson',
+    status: 'completed',
+  },
+  {
+    id: 2,
+    title: 'Team Productivity Analysis',
+    description: 'Analysis of team performance and productivity',
+    type: 'Team',
+    createdAt: '2023-06-15',
+    author: 'Sarah Miller',
+    status: 'completed',
+  },
+  {
+    id: 3,
+    title: 'Resource Allocation Report',
+    description: 'Current resource allocation across projects',
+    type: 'Resources',
+    createdAt: '2023-06-10',
+    author: 'Michael Chen',
+    status: 'completed',
+  },
+  {
+    id: 4,
+    title: 'Upcoming Deadlines',
+    description: 'Summary of upcoming project deadlines',
+    type: 'Timeline',
+    createdAt: '2023-06-05',
+    author: 'Jessica Taylor',
+    status: 'completed',
+  },
+  {
+    id: 5,
+    title: 'Budget Tracking Q2',
+    description: 'Financial overview of all current projects',
+    type: 'Financial',
+    createdAt: '2023-06-01',
+    author: 'David Wilson',
+    status: 'pending',
+  },
+];
+
+// Mock project stats
+const projectStats = [
+  { name: 'Total Projects', value: 42, icon: <ClipboardList className="h-4 w-4" />, change: '+8%' },
+  { name: 'Completed', value: 28, icon: <ListChecks className="h-4 w-4" />, change: '+12%' },
+  { name: 'In Progress', value: 10, icon: <RefreshCw className="h-4 w-4" />, change: '-5%' },
+  { name: 'Delayed', value: 4, icon: <Calendar className="h-4 w-4" />, change: '-15%' },
 ];
 
 const Reports = () => {
-  const [selectedTab, setSelectedTab] = useState('dashboard');
-  const [selectedPeriod, setSelectedPeriod] = useState('6months');
-  const [selectedReportType, setSelectedReportType] = useState('all');
-  const [reportData, setReportData] = useState(reportsList);
-
-  // Handle report generation
-  const handleGenerateReport = () => {
-    toast.success('Report generation started. It will be ready in a few moments.');
-    
-    // Simulate report generation with a delay
-    setTimeout(() => {
-      toast.success('Report generated successfully!');
-    }, 2000);
-  };
-
-  // Handle report download
-  const handleDownloadReport = (reportId: number) => {
-    toast.success(`Downloading report #${reportId}...`);
-    // In a real app, this would trigger a file download
-  };
-
-  // Handle report sharing
-  const handleShareReport = (reportId: number) => {
-    toast.success(`Share dialog opened for report #${reportId}`);
-    // In a real app, this would open a sharing dialog
-  };
-
-  // Handle report filtering
-  const handleFilterReports = (type: string) => {
-    setSelectedReportType(type);
-    
-    if (type === 'all') {
-      setReportData(reportsList);
-    } else {
-      const filtered = reportsList.filter(report => report.type === type);
-      setReportData(filtered);
-    }
-  };
-
-  // Handle creating a new report
-  const handleCreateReport = () => {
-    toast.success('New report creation started');
-    // In a real app, this would open a form or dialog
-  };
+  const [activeTab, setActiveTab] = useState('overview');
+  const [timeRange, setTimeRange] = useState('6m');
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col space-y-6">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-            <div>
-              <h1 className="text-3xl font-bold">Reports & Analytics</h1>
-              <p className="text-muted-foreground mt-1">
-                View insights and generate reports about your projects
-              </p>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              <Button onClick={handleGenerateReport} className="gap-2">
-                <FileText className="h-4 w-4" />
-                Generate Report
-              </Button>
-            </div>
+      <main className="container mx-auto py-6 px-4 md:px-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
+            <p className="text-muted-foreground mt-1">Track project performance and team productivity</p>
           </div>
-          
-          {/* Tabs */}
-          <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-            <TabsList className="grid grid-cols-2 w-[400px]">
-              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-              <TabsTrigger value="reports">Reports List</TabsTrigger>
-            </TabsList>
-            
-            {/* Dashboard Tab */}
-            <TabsContent value="dashboard" className="space-y-4">
-              <div className="flex justify-end mb-4">
-                <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select Period" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="30days">Last 30 Days</SelectItem>
-                    <SelectItem value="3months">Last 3 Months</SelectItem>
-                    <SelectItem value="6months">Last 6 Months</SelectItem>
-                    <SelectItem value="year">Last Year</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Productivity Chart */}
-                <Card className="col-span-full md:col-span-2">
-                  <CardHeader>
-                    <CardTitle>Project Productivity</CardTitle>
-                    <CardDescription>Task completion by status over time</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-80">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={productivityData}
-                          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <RechartsTooltip />
-                          <Legend />
-                          <Bar dataKey="completed" stackId="a" fill="#10b981" name="Completed" />
-                          <Bar dataKey="inProgress" stackId="a" fill="#3b82f6" name="In Progress" />
-                          <Bar dataKey="notStarted" stackId="a" fill="#f97316" name="Not Started" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Team Workload Chart */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Team Workload</CardTitle>
-                    <CardDescription>Tasks assigned per team member</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-60">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={workloadData}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            outerRadius={80}
-                            fill="#8884d8"
-                            dataKey="value"
-                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                          >
-                            {workloadData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <RechartsTooltip />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Performance Chart */}
-                <Card className="md:col-span-2">
-                  <CardHeader>
-                    <CardTitle>Team Performance</CardTitle>
-                    <CardDescription>Overall performance percentage over time</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-60">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                          data={performanceData}
-                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <RechartsTooltip />
-                          <Line 
-                            type="monotone" 
-                            dataKey="performance" 
-                            stroke="#8884d8" 
-                            activeDot={{ r: 8 }} 
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-            
-            {/* Reports List Tab */}
-            <TabsContent value="reports" className="space-y-4">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Filter className="h-4 w-4" />
-                    Filter
-                  </Button>
-                  <Select 
-                    value={selectedReportType} 
-                    onValueChange={handleFilterReports}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Report Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Reports</SelectItem>
-                      <SelectItem value="quarterly">Quarterly</SelectItem>
-                      <SelectItem value="campaign">Campaign</SelectItem>
-                      <SelectItem value="performance">Performance</SelectItem>
-                      <SelectItem value="resource">Resource</SelectItem>
-                      <SelectItem value="financial">Financial</SelectItem>
-                    </SelectContent>
-                  </Select>
+          <div className="flex gap-3 mt-4 md:mt-0">
+            <Button variant="outline">
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              New Report
+            </Button>
+          </div>
+        </div>
+
+        {/* Project stats summary */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {projectStats.map((stat) => (
+            <Card key={stat.name} className="border shadow-sm">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium">{stat.name}</CardTitle>
+                  <div className="text-muted-foreground">{stat.icon}</div>
                 </div>
-                
-                <Button onClick={handleCreateReport} className="gap-2">
-                  <PlusCircle className="h-4 w-4" />
-                  New Report
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className={`text-xs mt-1 ${
+                  stat.change.startsWith('+') ? 'text-green-500' : 'text-red-500'
+                }`}>
+                  {stat.change} from last month
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Reports tabs */}
+        <Tabs defaultValue="overview" className="space-y-4" onValueChange={setActiveTab}>
+          <div className="flex justify-between items-center">
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="performance">Performance</TabsTrigger>
+              <TabsTrigger value="all-reports">All Reports</TabsTrigger>
+            </TabsList>
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select time range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="30d">Last 30 Days</SelectItem>
+                <SelectItem value="3m">Last 3 Months</SelectItem>
+                <SelectItem value="6m">Last 6 Months</SelectItem>
+                <SelectItem value="1y">Last Year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Overview tab content */}
+          <TabsContent value="overview" className="space-y-4">
+            <Card className="border shadow-sm">
+              <CardHeader>
+                <CardTitle>Project Performance</CardTitle>
+                <CardDescription>
+                  Overview of project completion status for the last 6 months
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={performanceData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="completed" stackId="a" fill="#10b981" name="Completed" />
+                    <Bar dataKey="pending" stackId="a" fill="#f59e0b" name="Pending" />
+                    <Bar dataKey="cancelled" stackId="a" fill="#ef4444" name="Cancelled" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+              <CardFooter className="text-xs text-muted-foreground flex justify-between">
+                <span>Updated: Today at 9:30 AM</span>
+                <Button variant="ghost" size="sm" className="h-8 gap-1">
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  Refresh
                 </Button>
-              </div>
-              
-              <Card>
+              </CardFooter>
+            </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="border shadow-sm">
                 <CardHeader>
-                  <CardTitle>Available Reports</CardTitle>
+                  <CardTitle>Recent Reports</CardTitle>
                   <CardDescription>
-                    {reportData.length} report{reportData.length !== 1 ? 's' : ''} available
+                    The most recently generated reports
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {reportData.length > 0 ? (
-                      reportData.map((report) => (
-                        <div 
-                          key={report.id} 
-                          className="flex justify-between items-center p-4 border rounded-lg hover:bg-accent/50 transition-colors"
-                        >
-                          <div>
-                            <h4 className="font-medium">{report.name}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              Generated on {new Date(report.date).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div className="flex space-x-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => handleShareReport(report.id)}
-                            >
-                              <Share2 className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleDownloadReport(report.id)}
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                          </div>
+                  <ul className="space-y-4">
+                    {reportsList.slice(0, 3).map((report) => (
+                      <li key={report.id} className="flex justify-between items-start pb-3 border-b last:border-0 last:pb-0">
+                        <div>
+                          <div className="font-medium">{report.title}</div>
+                          <div className="text-xs text-muted-foreground">{report.createdAt}</div>
                         </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-8">
-                        <FileDown className="mx-auto h-12 w-12 text-muted-foreground/50" />
-                        <h3 className="mt-4 text-lg font-medium">No reports found</h3>
-                        <p className="text-muted-foreground">
-                          No reports match your current filter criteria
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                        <Button variant="ghost" size="sm" className="h-8">
+                          <FileText className="h-3.5 w-3.5 mr-1" />
+                          View
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
                 </CardContent>
-                <CardFooter className="flex justify-between">
-                  <Button variant="outline">Previous</Button>
-                  <Button variant="outline">Next</Button>
-                </CardFooter>
               </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
+
+              <Card className="border shadow-sm">
+                <CardHeader>
+                  <CardTitle>Report Types</CardTitle>
+                  <CardDescription>
+                    Distribution of report types
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="h-[180px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      layout="vertical"
+                      data={[
+                        { name: 'Performance', value: 12 },
+                        { name: 'Team', value: 8 },
+                        { name: 'Resources', value: 5 },
+                        { name: 'Timeline', value: 9 },
+                        { name: 'Financial', value: 7 },
+                      ]}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" />
+                      <YAxis dataKey="name" type="category" />
+                      <Tooltip />
+                      <Bar dataKey="value" fill="#6366f1" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Performance tab content */}
+          <TabsContent value="performance">
+            <Card className="border shadow-sm">
+              <CardHeader>
+                <CardTitle>Performance Metrics</CardTitle>
+                <CardDescription>
+                  Detailed project performance analytics
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  This section contains detailed performance metrics and would display
+                  comprehensive charts and analytics about project performance.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* All Reports tab content */}
+          <TabsContent value="all-reports">
+            <Card className="border shadow-sm">
+              <CardHeader>
+                <div className="flex flex-col sm:flex-row justify-between">
+                  <div>
+                    <CardTitle>All Reports</CardTitle>
+                    <CardDescription>
+                      Complete list of all generated reports
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-2 mt-4 sm:mt-0">
+                    <Button variant="outline" size="sm">
+                      <Filter className="h-3.5 w-3.5 mr-1" />
+                      Filter
+                    </Button>
+                    <Button variant="secondary" size="sm">
+                      <BarChart3 className="h-3.5 w-3.5 mr-1" />
+                      Sort
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Author</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {reportsList.map((report) => (
+                      <TableRow key={report.id}>
+                        <TableCell>
+                          <div className="font-medium">{report.title}</div>
+                          <div className="text-xs text-muted-foreground">{report.description}</div>
+                        </TableCell>
+                        <TableCell>{report.type}</TableCell>
+                        <TableCell>{report.author}</TableCell>
+                        <TableCell>{report.createdAt}</TableCell>
+                        <TableCell>
+                          <Badge variant={report.status === 'completed' ? 'default' : 'outline'}>
+                            {report.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm">
+                            <FileText className="h-3.5 w-3.5 mr-1" />
+                            View
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
