@@ -101,7 +101,7 @@ const HelpPopover = () => {
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" aria-label="Help Center">
           <HelpCircle className="h-5 w-5 text-muted-foreground" />
         </Button>
       </PopoverTrigger>

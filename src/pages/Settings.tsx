@@ -18,6 +18,17 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { BellRing, Globe, Lock, Moon, Shield, User } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -55,6 +66,10 @@ const Settings = () => {
     sessionTimeout: '30min',
     passwordLastChanged: '2 months ago',
   });
+
+  // Password change state
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   
   // Handle account settings changes
   const handleAccountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,6 +126,11 @@ const Settings = () => {
   const handleSaveAppearanceSettings = () => {
     toast.success('Appearance settings saved');
   };
+
+  // Save security settings
+  const handleSaveSecuritySettings = () => {
+    toast.success('Security settings updated successfully');
+  };
   
   // Enable two-factor authentication
   const handleEnableTwoFactor = () => {
@@ -123,7 +143,24 @@ const Settings = () => {
   
   // Change password
   const handleChangePassword = () => {
-    toast.info('Password change dialog would open here');
+    if (!newPassword || !confirmPassword) {
+      toast.error('Please enter and confirm your new password');
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    
+    setSecuritySettings({
+      ...securitySettings,
+      passwordLastChanged: 'Just now'
+    });
+    
+    setNewPassword('');
+    setConfirmPassword('');
+    toast.success('Password changed successfully');
   };
   
   return (
@@ -460,13 +497,55 @@ const Settings = () => {
                               <p className="text-sm">Password last changed:</p>
                               <p className="text-sm font-medium mt-1">{securitySettings.passwordLastChanged}</p>
                             </div>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={handleChangePassword}
-                            >
-                              Change Password
-                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                >
+                                  Change Password
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Change Password</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Enter your new password below. Choose a strong password with a mix of letters, numbers, and special characters.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <div className="space-y-4 py-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="new-password">New Password</Label>
+                                    <Input 
+                                      id="new-password" 
+                                      type="password"
+                                      value={newPassword}
+                                      onChange={(e) => setNewPassword(e.target.value)}
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                                    <Input 
+                                      id="confirm-password" 
+                                      type="password"
+                                      value={confirmPassword}
+                                      onChange={(e) => setConfirmPassword(e.target.value)}
+                                    />
+                                  </div>
+                                </div>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel onClick={() => {
+                                    setNewPassword('');
+                                    setConfirmPassword('');
+                                  }}>
+                                    Cancel
+                                  </AlertDialogCancel>
+                                  <AlertDialogAction onClick={handleChangePassword}>
+                                    Change Password
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </div>
                       </div>
@@ -493,7 +572,7 @@ const Settings = () => {
                       </div>
                     </div>
                     <div className="flex justify-end">
-                      <Button>Save Security Settings</Button>
+                      <Button onClick={handleSaveSecuritySettings}>Save Security Settings</Button>
                     </div>
                   </div>
                 </TabsContent>
