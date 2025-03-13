@@ -1,714 +1,504 @@
+
 import React, { useState } from 'react';
-import { 
-  Settings as SettingsIcon, 
-  User, 
-  Bell, 
-  ShieldCheck, 
-  Palette, 
-  Globe, 
-  CreditCard,
-  Users,
-  Save
-} from 'lucide-react';
 import Navbar from '../components/Navbar';
-import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Slider } from '@/components/ui/slider';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/components/ui/tabs";
+} from '@/components/ui/tabs';
+import { BellRing, Globe, Lock, Moon, Shield, User } from 'lucide-react';
 import { toast } from 'sonner';
 
-// Mock settings data
-const initialSettings = {
-  appearance: {
-    theme: 'system',
-    fontSize: 16,
-    reducedMotion: false,
-    compactMode: false,
-  },
-  notifications: {
-    email: true,
-    browser: true,
-    mobile: true,
-    weeklyDigest: true,
-    mentions: true,
-  },
-  security: {
-    twoFactorAuth: false,
-    sessionTimeout: '30',
-    loginNotifications: true,
-    saveLoginInfo: true,
-  },
-  language: {
-    displayLanguage: 'en',
-    contentLanguage: 'en',
-    dateFormat: 'MM/DD/YYYY',
-    timeFormat: '12h',
-  },
-  teamManagement: {
-    allowInvites: true,
-    restrictedAccess: false,
-    visibilityScope: 'team',
-    approvalRequired: true,
-  },
-};
-
 const Settings = () => {
-  const { user } = useAuth();
-  const [settings, setSettings] = useState(initialSettings);
-  const [activeTab, setActiveTab] = useState('appearance');
-
-  const handleAppearanceChange = (key: string, value: any) => {
-    setSettings({
-      ...settings,
-      appearance: {
-        ...settings.appearance,
-        [key]: value,
-      },
+  const [activeTab, setActiveTab] = useState('account');
+  
+  // Account settings state
+  const [accountSettings, setAccountSettings] = useState({
+    name: 'Admin User',
+    email: 'admin@example.com',
+    language: 'english',
+    timezone: 'pst',
+  });
+  
+  // Notification settings state
+  const [notificationSettings, setNotificationSettings] = useState({
+    emailNotifications: true,
+    pushNotifications: false,
+    weeklyDigest: true,
+    mentionNotifications: true,
+    taskAssignments: true,
+    projectUpdates: true,
+  });
+  
+  // Appearance settings state
+  const [appearanceSettings, setAppearanceSettings] = useState({
+    theme: 'system',
+    density: 'comfortable',
+    animations: true,
+  });
+  
+  // Security settings state
+  const [securitySettings, setSecuritySettings] = useState({
+    twoFactorAuth: false,
+    sessionTimeout: '30min',
+    passwordLastChanged: '2 months ago',
+  });
+  
+  // Handle account settings changes
+  const handleAccountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setAccountSettings({
+      ...accountSettings,
+      [name]: value,
     });
   };
-
-  const handleNotificationsChange = (key: string, value: boolean) => {
-    setSettings({
-      ...settings,
-      notifications: {
-        ...settings.notifications,
-        [key]: value,
-      },
+  
+  // Handle select changes
+  const handleSelectChange = (name: string, value: string) => {
+    setAccountSettings({
+      ...accountSettings,
+      [name]: value,
     });
   };
-
-  const handleSecurityChange = (key: string, value: any) => {
-    setSettings({
-      ...settings,
-      security: {
-        ...settings.security,
-        [key]: value,
-      },
+  
+  // Handle notification toggle changes
+  const handleNotificationToggle = (name: string, checked: boolean) => {
+    setNotificationSettings({
+      ...notificationSettings,
+      [name]: checked,
     });
   };
-
-  const handleLanguageChange = (key: string, value: string) => {
-    setSettings({
-      ...settings,
-      language: {
-        ...settings.language,
-        [key]: value,
-      },
+  
+  // Handle appearance settings changes
+  const handleAppearanceChange = (name: string, value: string | boolean) => {
+    setAppearanceSettings({
+      ...appearanceSettings,
+      [name]: value,
     });
   };
-
-  const handleTeamManagementChange = (key: string, value: any) => {
-    setSettings({
-      ...settings,
-      teamManagement: {
-        ...settings.teamManagement,
-        [key]: value,
-      },
+  
+  // Handle security settings changes
+  const handleSecurityChange = (name: string, value: string | boolean) => {
+    setSecuritySettings({
+      ...securitySettings,
+      [name]: value,
     });
   };
-
-  const saveSettings = () => {
-    // In a real app, this would call an API to save the settings
-    toast.success('Settings saved successfully');
+  
+  // Save account settings
+  const handleSaveAccountSettings = () => {
+    toast.success('Account settings saved successfully');
   };
-
+  
+  // Save notification settings
+  const handleSaveNotificationSettings = () => {
+    toast.success('Notification preferences updated');
+  };
+  
+  // Save appearance settings
+  const handleSaveAppearanceSettings = () => {
+    toast.success('Appearance settings saved');
+  };
+  
+  // Enable two-factor authentication
+  const handleEnableTwoFactor = () => {
+    setSecuritySettings({
+      ...securitySettings,
+      twoFactorAuth: true,
+    });
+    toast.success('Two-factor authentication enabled');
+  };
+  
+  // Change password
+  const handleChangePassword = () => {
+    toast.info('Password change dialog would open here');
+  };
+  
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="container mx-auto py-6 px-4 md:px-6">
-        <div className="flex flex-col md:flex-row justify-between items-start mb-8">
+      
+      <main className="container max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        <div className="flex flex-col space-y-6">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-            <p className="text-muted-foreground mt-1">Manage your account and application settings</p>
+            <h1 className="text-3xl font-bold">Settings</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your account settings and preferences
+            </p>
           </div>
-          <Button className="mt-4 md:mt-0" onClick={saveSettings}>
-            <Save className="mr-2 h-4 w-4" />
-            Save Changes
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6">
-          {/* Sidebar navigation for settings */}
-          <Card className="border shadow-sm md:sticky md:top-20 h-fit">
-            <CardContent className="p-4">
-              <Tabs
-                orientation="vertical"
-                defaultValue="appearance"
-                className="w-full"
+          
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Sidebar */}
+            <div className="lg:col-span-1">
+              <Tabs 
+                orientation="vertical" 
+                value={activeTab} 
                 onValueChange={setActiveTab}
-                value={activeTab}
+                className="hidden lg:block"
               >
-                <TabsList className="flex flex-col h-auto space-y-1 bg-transparent p-0">
-                  <TabsTrigger
-                    value="appearance"
-                    className="justify-start px-3 py-2"
-                  >
-                    <Palette className="h-4 w-4 mr-2" />
-                    Appearance
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="notifications"
-                    className="justify-start px-3 py-2"
-                  >
-                    <Bell className="h-4 w-4 mr-2" />
-                    Notifications
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="security"
-                    className="justify-start px-3 py-2"
-                  >
-                    <ShieldCheck className="h-4 w-4 mr-2" />
-                    Security
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="language"
-                    className="justify-start px-3 py-2"
-                  >
-                    <Globe className="h-4 w-4 mr-2" />
-                    Language & Region
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="teams"
-                    className="justify-start px-3 py-2"
-                  >
-                    <Users className="h-4 w-4 mr-2" />
-                    Team Management
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="billing"
-                    className="justify-start px-3 py-2"
-                  >
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Billing
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="account"
-                    className="justify-start px-3 py-2"
+                <TabsList className="flex flex-col h-auto bg-transparent p-0 border-r border-border">
+                  <TabsTrigger 
+                    value="account" 
+                    className="justify-start px-4 py-2 data-[state=active]:bg-accent/50 data-[state=active]:border-r-2 data-[state=active]:border-primary rounded-none"
                   >
                     <User className="h-4 w-4 mr-2" />
                     Account
                   </TabsTrigger>
+                  <TabsTrigger 
+                    value="notifications" 
+                    className="justify-start px-4 py-2 data-[state=active]:bg-accent/50 data-[state=active]:border-r-2 data-[state=active]:border-primary rounded-none"
+                  >
+                    <BellRing className="h-4 w-4 mr-2" />
+                    Notifications
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="appearance" 
+                    className="justify-start px-4 py-2 data-[state=active]:bg-accent/50 data-[state=active]:border-r-2 data-[state=active]:border-primary rounded-none"
+                  >
+                    <Moon className="h-4 w-4 mr-2" />
+                    Appearance
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="security" 
+                    className="justify-start px-4 py-2 data-[state=active]:bg-accent/50 data-[state=active]:border-r-2 data-[state=active]:border-primary rounded-none"
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Security
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
-            </CardContent>
-          </Card>
-
-          {/* Settings content */}
-          <div className="space-y-6">
-            {/* Appearance Settings */}
-            {activeTab === 'appearance' && (
-              <Card className="border shadow-sm">
-                <CardHeader>
-                  <CardTitle>Appearance</CardTitle>
-                  <CardDescription>
-                    Customize how ProjectFlow looks and feels
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label>Theme</Label>
-                    <RadioGroup
-                      value={settings.appearance.theme}
-                      onValueChange={(value) => handleAppearanceChange('theme', value)}
-                      className="flex gap-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="light" id="theme-light" />
-                        <Label htmlFor="theme-light">Light</Label>
+              
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="lg:hidden">
+                <TabsList className="grid grid-cols-4 w-full">
+                  <TabsTrigger value="account">
+                    <User className="h-4 w-4" />
+                  </TabsTrigger>
+                  <TabsTrigger value="notifications">
+                    <BellRing className="h-4 w-4" />
+                  </TabsTrigger>
+                  <TabsTrigger value="appearance">
+                    <Moon className="h-4 w-4" />
+                  </TabsTrigger>
+                  <TabsTrigger value="security">
+                    <Shield className="h-4 w-4" />
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+            
+            {/* Main Content */}
+            <div className="lg:col-span-4">
+              <div className="bg-card border border-border rounded-xl shadow-subtle overflow-hidden">
+                {/* Account Settings */}
+                <TabsContent value="account" className="m-0">
+                  <div className="p-6 border-b border-border">
+                    <h2 className="text-xl font-semibold">Account Settings</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Manage your profile and account preferences
+                    </p>
+                  </div>
+                  <div className="p-6 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Full Name</Label>
+                        <Input 
+                          id="name" 
+                          name="name" 
+                          value={accountSettings.name} 
+                          onChange={handleAccountChange} 
+                        />
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="dark" id="theme-dark" />
-                        <Label htmlFor="theme-dark">Dark</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email Address</Label>
+                        <Input 
+                          id="email" 
+                          name="email" 
+                          type="email" 
+                          value={accountSettings.email} 
+                          onChange={handleAccountChange} 
+                        />
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="system" id="theme-system" />
-                        <Label htmlFor="theme-system">System</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="language">Language</Label>
+                        <Select 
+                          value={accountSettings.language} 
+                          onValueChange={(value) => handleSelectChange('language', value)}
+                        >
+                          <SelectTrigger id="language">
+                            <SelectValue placeholder="Select language" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="english">English</SelectItem>
+                            <SelectItem value="spanish">Spanish</SelectItem>
+                            <SelectItem value="french">French</SelectItem>
+                            <SelectItem value="german">German</SelectItem>
+                            <SelectItem value="chinese">Chinese</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
-                    </RadioGroup>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <Label>Font Size ({settings.appearance.fontSize}px)</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="timezone">Timezone</Label>
+                        <Select 
+                          value={accountSettings.timezone} 
+                          onValueChange={(value) => handleSelectChange('timezone', value)}
+                        >
+                          <SelectTrigger id="timezone">
+                            <SelectValue placeholder="Select timezone" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pst">Pacific Standard Time (PST)</SelectItem>
+                            <SelectItem value="mst">Mountain Standard Time (MST)</SelectItem>
+                            <SelectItem value="cst">Central Standard Time (CST)</SelectItem>
+                            <SelectItem value="est">Eastern Standard Time (EST)</SelectItem>
+                            <SelectItem value="gmt">Greenwich Mean Time (GMT)</SelectItem>
+                            <SelectItem value="cet">Central European Time (CET)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                    <Slider
-                      value={[settings.appearance.fontSize]}
-                      min={12}
-                      max={20}
-                      step={1}
-                      onValueChange={(value) => handleAppearanceChange('fontSize', value[0])}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Small</span>
-                      <span>Large</span>
+                    <div className="flex justify-end">
+                      <Button onClick={handleSaveAccountSettings}>Save Changes</Button>
                     </div>
                   </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Reduced Motion</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Reduce animation and visual effects
-                      </p>
-                    </div>
-                    <Switch
-                      checked={settings.appearance.reducedMotion}
-                      onCheckedChange={(checked) => handleAppearanceChange('reducedMotion', checked)}
-                    />
+                </TabsContent>
+                
+                {/* Notification Settings */}
+                <TabsContent value="notifications" className="m-0">
+                  <div className="p-6 border-b border-border">
+                    <h2 className="text-xl font-semibold">Notification Preferences</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Control how and when you receive notifications
+                    </p>
                   </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Compact Mode</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Reduce spacing and density of UI elements
-                      </p>
-                    </div>
-                    <Switch
-                      checked={settings.appearance.compactMode}
-                      onCheckedChange={(checked) => handleAppearanceChange('compactMode', checked)}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Notifications Settings */}
-            {activeTab === 'notifications' && (
-              <Card className="border shadow-sm">
-                <CardHeader>
-                  <CardTitle>Notifications</CardTitle>
-                  <CardDescription>
-                    Configure how and when you receive notifications
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Email Notifications</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Receive notifications via email
-                      </p>
-                    </div>
-                    <Switch
-                      checked={settings.notifications.email}
-                      onCheckedChange={(checked) => handleNotificationsChange('email', checked)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Browser Notifications</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Show desktop notifications in your browser
-                      </p>
-                    </div>
-                    <Switch
-                      checked={settings.notifications.browser}
-                      onCheckedChange={(checked) => handleNotificationsChange('browser', checked)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Mobile Push Notifications</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Receive push notifications on your mobile devices
-                      </p>
-                    </div>
-                    <Switch
-                      checked={settings.notifications.mobile}
-                      onCheckedChange={(checked) => handleNotificationsChange('mobile', checked)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Weekly Digest</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Get a weekly summary of activity
-                      </p>
-                    </div>
-                    <Switch
-                      checked={settings.notifications.weeklyDigest}
-                      onCheckedChange={(checked) => handleNotificationsChange('weeklyDigest', checked)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Mentions</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Get notified when someone mentions you
-                      </p>
-                    </div>
-                    <Switch
-                      checked={settings.notifications.mentions}
-                      onCheckedChange={(checked) => handleNotificationsChange('mentions', checked)}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Security Settings */}
-            {activeTab === 'security' && (
-              <Card className="border shadow-sm">
-                <CardHeader>
-                  <CardTitle>Security</CardTitle>
-                  <CardDescription>
-                    Manage your account security settings
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Two-Factor Authentication</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Add an extra layer of security to your account
-                      </p>
-                    </div>
-                    <Switch
-                      checked={settings.security.twoFactorAuth}
-                      onCheckedChange={(checked) => handleSecurityChange('twoFactorAuth', checked)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Session Timeout</Label>
-                    <Select
-                      value={settings.security.sessionTimeout}
-                      onValueChange={(value) => handleSecurityChange('sessionTimeout', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select timeout duration" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="15">15 minutes</SelectItem>
-                        <SelectItem value="30">30 minutes</SelectItem>
-                        <SelectItem value="60">1 hour</SelectItem>
-                        <SelectItem value="120">2 hours</SelectItem>
-                        <SelectItem value="never">Never</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Login Notifications</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Get notified when someone logs into your account
-                      </p>
-                    </div>
-                    <Switch
-                      checked={settings.security.loginNotifications}
-                      onCheckedChange={(checked) => handleSecurityChange('loginNotifications', checked)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Remember Login Information</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Stay logged in across sessions
-                      </p>
-                    </div>
-                    <Switch
-                      checked={settings.security.saveLoginInfo}
-                      onCheckedChange={(checked) => handleSecurityChange('saveLoginInfo', checked)}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Language & Region Settings */}
-            {activeTab === 'language' && (
-              <Card className="border shadow-sm">
-                <CardHeader>
-                  <CardTitle>Language & Region</CardTitle>
-                  <CardDescription>
-                    Customize language and regional preferences
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label>Display Language</Label>
-                    <Select
-                      value={settings.language.displayLanguage}
-                      onValueChange={(value) => handleLanguageChange('displayLanguage', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select display language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="es">Spanish</SelectItem>
-                        <SelectItem value="fr">French</SelectItem>
-                        <SelectItem value="de">German</SelectItem>
-                        <SelectItem value="ja">Japanese</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Content Language</Label>
-                    <Select
-                      value={settings.language.contentLanguage}
-                      onValueChange={(value) => handleLanguageChange('contentLanguage', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select content language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="es">Spanish</SelectItem>
-                        <SelectItem value="fr">French</SelectItem>
-                        <SelectItem value="de">German</SelectItem>
-                        <SelectItem value="ja">Japanese</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Date Format</Label>
-                    <Select
-                      value={settings.language.dateFormat}
-                      onValueChange={(value) => handleLanguageChange('dateFormat', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select date format" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
-                        <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
-                        <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Time Format</Label>
-                    <Select
-                      value={settings.language.timeFormat}
-                      onValueChange={(value) => handleLanguageChange('timeFormat', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select time format" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="12h">12-hour (AM/PM)</SelectItem>
-                        <SelectItem value="24h">24-hour</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Team Management Settings */}
-            {activeTab === 'teams' && (
-              <Card className="border shadow-sm">
-                <CardHeader>
-                  <CardTitle>Team Management</CardTitle>
-                  <CardDescription>
-                    Configure team access and permissions
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Allow Member Invitations</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Team members can invite others to join
-                      </p>
-                    </div>
-                    <Switch
-                      checked={settings.teamManagement.allowInvites}
-                      onCheckedChange={(checked) => handleTeamManagementChange('allowInvites', checked)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Restricted Access</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Only admins can add or remove members
-                      </p>
-                    </div>
-                    <Switch
-                      checked={settings.teamManagement.restrictedAccess}
-                      onCheckedChange={(checked) => handleTeamManagementChange('restrictedAccess', checked)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Project Visibility</Label>
-                    <Select
-                      value={settings.teamManagement.visibilityScope}
-                      onValueChange={(value) => handleTeamManagementChange('visibilityScope', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select visibility scope" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Entire organization</SelectItem>
-                        <SelectItem value="team">Team members only</SelectItem>
-                        <SelectItem value="restricted">Restricted by role</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Require Approval for New Members</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Admin approval required for new team members
-                      </p>
-                    </div>
-                    <Switch
-                      checked={settings.teamManagement.approvalRequired}
-                      onCheckedChange={(checked) => handleTeamManagementChange('approvalRequired', checked)}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Billing Settings */}
-            {activeTab === 'billing' && (
-              <Card className="border shadow-sm">
-                <CardHeader>
-                  <CardTitle>Billing</CardTitle>
-                  <CardDescription>
-                    Manage your subscription and payment information
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="p-6 border rounded-md bg-muted/50">
-                    <h3 className="text-lg font-medium mb-2">Current Plan</h3>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-bold text-xl">Professional</div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          $12 per user/month, billed annually
+                  <div className="p-6 space-y-6">
+                    <div className="space-y-6">
+                      <div className="space-y-4">
+                        <h3 className="text-md font-medium">Notification Channels</h3>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label htmlFor="email-notifications" className="text-base">Email Notifications</Label>
+                            <p className="text-sm text-muted-foreground">Receive notifications via email</p>
+                          </div>
+                          <Switch 
+                            id="email-notifications" 
+                            checked={notificationSettings.emailNotifications} 
+                            onCheckedChange={(checked) => handleNotificationToggle('emailNotifications', checked)} 
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label htmlFor="push-notifications" className="text-base">Push Notifications</Label>
+                            <p className="text-sm text-muted-foreground">Receive notifications on your device</p>
+                          </div>
+                          <Switch 
+                            id="push-notifications" 
+                            checked={notificationSettings.pushNotifications} 
+                            onCheckedChange={(checked) => handleNotificationToggle('pushNotifications', checked)} 
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label htmlFor="weekly-digest" className="text-base">Weekly Digest</Label>
+                            <p className="text-sm text-muted-foreground">Get a summary of activity once a week</p>
+                          </div>
+                          <Switch 
+                            id="weekly-digest" 
+                            checked={notificationSettings.weeklyDigest} 
+                            onCheckedChange={(checked) => handleNotificationToggle('weeklyDigest', checked)} 
+                          />
                         </div>
                       </div>
-                      <Button variant="outline">Change Plan</Button>
+                      
+                      <div className="space-y-4">
+                        <h3 className="text-md font-medium">Notification Types</h3>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label htmlFor="mention-notifications" className="text-base">Mentions</Label>
+                            <p className="text-sm text-muted-foreground">When you're mentioned in comments</p>
+                          </div>
+                          <Switch 
+                            id="mention-notifications" 
+                            checked={notificationSettings.mentionNotifications} 
+                            onCheckedChange={(checked) => handleNotificationToggle('mentionNotifications', checked)} 
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label htmlFor="task-assignments" className="text-base">Task Assignments</Label>
+                            <p className="text-sm text-muted-foreground">When you're assigned to a task</p>
+                          </div>
+                          <Switch 
+                            id="task-assignments" 
+                            checked={notificationSettings.taskAssignments} 
+                            onCheckedChange={(checked) => handleNotificationToggle('taskAssignments', checked)} 
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label htmlFor="project-updates" className="text-base">Project Updates</Label>
+                            <p className="text-sm text-muted-foreground">Changes to projects you're a part of</p>
+                          </div>
+                          <Switch 
+                            id="project-updates" 
+                            checked={notificationSettings.projectUpdates} 
+                            onCheckedChange={(checked) => handleNotificationToggle('projectUpdates', checked)} 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button onClick={handleSaveNotificationSettings}>Update Preferences</Button>
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-medium">Payment Method</h3>
-                    <div className="flex items-center border p-4 rounded-md">
-                      <div className="h-8 w-12 bg-muted rounded mr-4"></div>
+                </TabsContent>
+                
+                {/* Appearance Settings */}
+                <TabsContent value="appearance" className="m-0">
+                  <div className="p-6 border-b border-border">
+                    <h2 className="text-xl font-semibold">Appearance</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Customize how the application looks
+                    </p>
+                  </div>
+                  <div className="p-6 space-y-6">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="theme">Theme</Label>
+                        <Select 
+                          value={appearanceSettings.theme} 
+                          onValueChange={(value) => handleAppearanceChange('theme', value)}
+                        >
+                          <SelectTrigger id="theme">
+                            <SelectValue placeholder="Select theme" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="light">Light</SelectItem>
+                            <SelectItem value="dark">Dark</SelectItem>
+                            <SelectItem value="system">System Default</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="density">Density</Label>
+                        <Select 
+                          value={appearanceSettings.density} 
+                          onValueChange={(value) => handleAppearanceChange('density', value)}
+                        >
+                          <SelectTrigger id="density">
+                            <SelectValue placeholder="Select density" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="comfortable">Comfortable</SelectItem>
+                            <SelectItem value="compact">Compact</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor="animations" className="text-base">Animations</Label>
+                          <p className="text-sm text-muted-foreground">Enable UI animations</p>
+                        </div>
+                        <Switch 
+                          id="animations" 
+                          checked={appearanceSettings.animations} 
+                          onCheckedChange={(checked) => handleAppearanceChange('animations', checked)} 
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button onClick={handleSaveAppearanceSettings}>Save Preferences</Button>
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                {/* Security Settings */}
+                <TabsContent value="security" className="m-0">
+                  <div className="p-6 border-b border-border">
+                    <h2 className="text-xl font-semibold">Security</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Manage your security settings and password
+                    </p>
+                  </div>
+                  <div className="p-6 space-y-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-base font-medium">Two-Factor Authentication</h3>
+                          <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <span className={`text-xs font-medium ${securitySettings.twoFactorAuth ? 'text-green-600' : 'text-amber-600'}`}>
+                            {securitySettings.twoFactorAuth ? 'Enabled' : 'Disabled'}
+                          </span>
+                          {!securitySettings.twoFactorAuth && (
+                            <Button
+                              size="sm"
+                              onClick={handleEnableTwoFactor}
+                            >
+                              Enable
+                            </Button>
+                          )}
+                        </div>
+                      </div>
                       <div>
-                        <div className="font-medium">VISA ending in 4242</div>
-                        <div className="text-sm text-muted-foreground">Expires 12/2025</div>
+                        <h3 className="text-base font-medium">Password</h3>
+                        <div className="mt-2 p-4 border border-border rounded-lg bg-muted/30">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm">Password last changed:</p>
+                              <p className="text-sm font-medium mt-1">{securitySettings.passwordLastChanged}</p>
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={handleChangePassword}
+                            >
+                              Change Password
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="session-timeout">Session Timeout</Label>
+                        <Select 
+                          value={securitySettings.sessionTimeout} 
+                          onValueChange={(value) => handleSecurityChange('sessionTimeout', value)}
+                        >
+                          <SelectTrigger id="session-timeout">
+                            <SelectValue placeholder="Select timeout period" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="15min">15 minutes</SelectItem>
+                            <SelectItem value="30min">30 minutes</SelectItem>
+                            <SelectItem value="1hour">1 hour</SelectItem>
+                            <SelectItem value="4hours">4 hours</SelectItem>
+                            <SelectItem value="never">Never</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          You'll be logged out after this period of inactivity
+                        </p>
                       </div>
                     </div>
-                    <div className="flex space-x-2 mt-4">
-                      <Button variant="outline" size="sm">Update Card</Button>
-                      <Button variant="outline" size="sm">Add Payment Method</Button>
+                    <div className="flex justify-end">
+                      <Button>Save Security Settings</Button>
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-medium">Billing History</h3>
-                    <div className="text-sm">
-                      <div className="flex justify-between py-2 border-b">
-                        <div>April 1, 2023</div>
-                        <div className="font-medium">$144.00</div>
-                      </div>
-                      <div className="flex justify-between py-2 border-b">
-                        <div>March 1, 2023</div>
-                        <div className="font-medium">$144.00</div>
-                      </div>
-                      <div className="flex justify-between py-2">
-                        <div>February 1, 2023</div>
-                        <div className="font-medium">$144.00</div>
-                      </div>
-                    </div>
-                    <Button variant="link" className="p-0 h-auto" size="sm">
-                      View all invoices
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Account Settings */}
-            {activeTab === 'account' && (
-              <Card className="border shadow-sm">
-                <CardHeader>
-                  <CardTitle>Account</CardTitle>
-                  <CardDescription>
-                    Manage your account information
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="flex flex-col gap-1.5">
-                      <Label>Account Name</Label>
-                      <div className="font-medium">{user?.name}</div>
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label>Email Address</Label>
-                      <div className="font-medium">{user?.email}</div>
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label>Role</Label>
-                      <div className="font-medium capitalize">{user?.role}</div>
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label>Account Created</Label>
-                      <div className="font-medium">June 2021</div>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t">
-                    <Button variant="outline" className="mr-2">
-                      Change Password
-                    </Button>
-                    <Button variant="outline">
-                      Update Email
-                    </Button>
-                  </div>
-
-                  <div className="pt-4 border-t">
-                    <h3 className="text-lg font-medium mb-2">Account Actions</h3>
-                    <div className="flex flex-col gap-2">
-                      <Button variant="outline">Export Account Data</Button>
-                      <Button variant="destructive">Delete Account</Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                </TabsContent>
+              </div>
+            </div>
           </div>
         </div>
       </main>

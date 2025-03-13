@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -23,6 +22,7 @@ import { cn } from '@/lib/utils';
 import HelpPopover from './HelpPopover';
 import NotificationsPopover from './NotificationsPopover';
 import SearchModal from './SearchModal';
+import { toast } from 'sonner';
 
 interface NavItemProps {
   to: string;
@@ -86,6 +86,22 @@ const Navbar: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Handle logout
+  const handleLogout = () => {
+    logout();
+    toast.success("Logged out successfully");
+  };
+
+  // Handle navigation to profile page
+  const handleNavigateToProfile = () => {
+    setIsProfileMenuOpen(false);
+  };
+
+  // Handle navigation to settings page
+  const handleNavigateToSettings = () => {
+    setIsProfileMenuOpen(false);
+  };
 
   return (
     <nav className="bg-background border-b border-border sticky top-0 z-10">
@@ -162,6 +178,7 @@ const Navbar: React.FC = () => {
                     <Link
                       to="/profile"
                       className="block px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                      onClick={handleNavigateToProfile}
                     >
                       <div className="flex items-center">
                         <User size={16} className="mr-2" />
@@ -171,6 +188,7 @@ const Navbar: React.FC = () => {
                     <Link
                       to="/settings"
                       className="block px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                      onClick={handleNavigateToSettings}
                     >
                       <div className="flex items-center">
                         <Settings size={16} className="mr-2" />
@@ -178,7 +196,7 @@ const Navbar: React.FC = () => {
                       </div>
                     </Link>
                     <button
-                      onClick={logout}
+                      onClick={handleLogout}
                       className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
                     >
                       <div className="flex items-center">
