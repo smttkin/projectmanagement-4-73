@@ -1,7 +1,10 @@
 
 import React, { useState } from 'react';
-import { FileCheck } from 'lucide-react';
+import { FileCheck, Plus, Trash2 } from 'lucide-react';
 import ProjectCard, { ProjectCardProps } from '../ProjectCard';
+import { Button } from '../ui/button';
+import { useNavigate } from 'react-router-dom';
+import { projectsData as initialProjectsData } from '../../data/projects';
 
 type StatusFilter = 'all' | 'completed' | 'in-progress' | 'not-started' | 'at-risk';
 
@@ -9,8 +12,16 @@ interface ProjectsSectionProps {
   projects: ProjectCardProps[];
 }
 
-const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects }) => {
+const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects: propProjects }) => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [projects, setProjects] = useState<ProjectCardProps[]>(propProjects);
+  const navigate = useNavigate();
+
+  // Handle project deletion
+  const handleDeleteProject = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    setProjects(currentProjects => currentProjects.filter(project => project.id !== id));
+  };
   
   // Filter projects based on selected status
   const filteredProjects = statusFilter === 'all'
@@ -69,7 +80,11 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {filteredProjects.length > 0 ? (
             filteredProjects.map(project => (
-              <ProjectCard key={project.id} {...project} />
+              <ProjectCard 
+                key={project.id} 
+                {...project} 
+                onDelete={(e) => handleDeleteProject(project.id, e)}
+              />
             ))
           ) : (
             <div className="md:col-span-2 py-8 flex flex-col items-center justify-center text-center">

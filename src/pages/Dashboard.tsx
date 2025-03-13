@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import StatusCard from '../components/StatusCard';
@@ -16,6 +16,7 @@ import TeamSection from '../components/dashboard/TeamSection';
 import DeadlinesSection from '../components/dashboard/DeadlinesSection';
 import ActivitySection from '../components/dashboard/ActivitySection';
 import { projectsData } from '../data/projects';
+import { ProjectCardProps } from '@/components/ProjectCard';
 
 // Mock data for upcoming deadlines
 const upcomingDeadlines = [
@@ -41,16 +42,22 @@ const upcomingDeadlines = [
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const [projects, setProjects] = useState<ProjectCardProps[]>(projectsData);
   
-  // Calculate statistics
-  const totalProjects = projectsData.length;
-  const completedProjects = projectsData.filter(p => p.status === 'completed').length;
-  const inProgressProjects = projectsData.filter(p => p.status === 'in-progress').length;
-  const atRiskProjects = projectsData.filter(p => p.status === 'at-risk').length;
+  // Update statistics when projects change
+  const totalProjects = projects.length;
+  const completedProjects = projects.filter(p => p.status === 'completed').length;
+  const inProgressProjects = projects.filter(p => p.status === 'in-progress').length;
+  const atRiskProjects = projects.filter(p => p.status === 'at-risk').length;
   
-  const avgProgressPercentage = Math.round(
-    projectsData.reduce((sum, project) => sum + project.progress, 0) / totalProjects
-  );
+  const avgProgressPercentage = projects.length > 0 
+    ? Math.round(projects.reduce((sum, project) => sum + project.progress, 0) / totalProjects)
+    : 0;
+
+  // Handle project addition
+  const handleProjectAdded = (newProject: ProjectCardProps) => {
+    setProjects(prevProjects => [newProject, ...prevProjects]);
+  };
   
   return (
     <div className="min-h-screen bg-background">
@@ -58,7 +65,7 @@ const Dashboard = () => {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
-        <DashboardHeader user={user} />
+        <DashboardHeader user={user} onProjectAdded={handleProjectAdded} />
         
         {/* Stats Overview */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
@@ -67,28 +74,28 @@ const Dashboard = () => {
             value={totalProjects}
             icon={FileCheck}
             color="blue"
-            change={{ value: 12, type: 'increase' }}
+            change={{ value: totalProjects > 0 ? totalProjects : 0, type: 'increase' }}
           />
           <StatusCard
             title="In Progress"
             value={inProgressProjects}
             icon={PlayCircle}
             color="orange"
-            change={{ value: 5, type: 'increase' }}
+            change={{ value: inProgressProjects, type: 'increase' }}
           />
           <StatusCard
             title="Completed"
             value={completedProjects}
             icon={CheckCircle}
             color="green"
-            change={{ value: 2, type: 'increase' }}
+            change={{ value: completedProjects, type: 'increase' }}
           />
           <StatusCard
             title="At Risk"
             value={atRiskProjects}
             icon={Clock}
             color="red"
-            change={{ value: 1, type: 'decrease' }}
+            change={{ value: atRiskProjects, type: atRiskProjects > 0 ? 'increase' : 'normal' }}
           />
         </div>
         
@@ -96,13 +103,13 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Projects Section - Takes up 2/3 of the grid on large screens */}
           <div className="lg:col-span-2">
-            <ProjectsSection projects={projectsData} />
-            <ProgressSection projects={projectsData} avgProgressPercentage={avgProgressPercentage} />
+            <ProjectsSection projects={projects} />
+            <ProgressSection projects={projects} avgProgressPercentage={avgProgressPercentage} />
           </div>
           
           {/* Sidebar - Takes up 1/3 of the grid on large screens */}
           <div>
-            <TeamSection projects={projectsData} />
+            <TeamSection projects={projects} />
             <DeadlinesSection deadlines={upcomingDeadlines} />
             <ActivitySection />
           </div>

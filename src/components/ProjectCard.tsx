@@ -6,12 +6,18 @@ import {
   Clock, 
   MoreHorizontal, 
   PlayCircle, 
+  Trash2,
   User 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { toast } from "sonner";
 import { useNavigate } from 'react-router-dom';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export interface ProjectCardProps {
   id: string;
@@ -27,6 +33,7 @@ export interface ProjectCardProps {
     avatar?: string;
   }>;
   onClick?: () => void;
+  onDelete?: (e: React.MouseEvent) => void;
 }
 
 const statusConfig = {
@@ -51,7 +58,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   priority,
   status,
   members,
-  onClick
+  onClick,
+  onDelete
 }) => {
   const navigate = useNavigate();
   const StatusIcon = statusConfig[status].icon;
@@ -60,29 +68,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     if (onClick) {
       onClick();
     } else {
-      toast.info(`Viewing project: ${title}`, {
-        description: "Navigating to project details page",
-        action: {
-          label: "View Details",
-          onClick: () => navigate(`/project/${id}`),
-        },
-      });
-      
-      // Navigate to the project detail page
+      // Navigate directly to the project detail page
       navigate(`/project/${id}`);
     }
   };
   
-  const handleMoreClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent the card click from triggering
-    
-    toast.info(`Project options for: ${title}`, {
-      description: "Choose an action below",
-      action: {
-        label: "Edit",
-        onClick: () => navigate(`/project/${id}/edit`),
-      },
-    });
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    navigate(`/project/${id}/edit`);
   };
   
   return (
@@ -96,12 +89,29 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             <h3 className="text-lg font-semibold line-clamp-1 mb-1">{title}</h3>
             <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{description}</p>
           </div>
-          <button 
-            className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/30 transition-colors"
-            onClick={handleMoreClick}
-          >
-            <MoreHorizontal size={18} className="text-muted-foreground" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/30 transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreHorizontal size={18} className="text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleEdit}>
+                Edit Project
+              </DropdownMenuItem>
+              {onDelete && (
+                <DropdownMenuItem 
+                  className="text-red-500 focus:text-red-500"
+                  onClick={onDelete}
+                >
+                  Delete Project
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         
         <div className="mt-4">

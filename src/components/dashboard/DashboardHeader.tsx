@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import { UserData } from '@/types/user';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -16,16 +15,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { projectsData } from '../../data/projects';
+import { ProjectCardProps } from '../ProjectCard';
 
 interface DashboardHeaderProps {
   user: UserData | null;
+  onProjectAdded?: (project: ProjectCardProps) => void;
 }
 
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user }) => {
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user, onProjectAdded }) => {
   const navigate = useNavigate();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
+  const [projectPriority, setProjectPriority] = useState<"low" | "medium" | "high">("medium");
 
   const handleNewProject = () => {
     setIsDialogOpen(true);
@@ -33,24 +37,39 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user }) => {
 
   const handleCreateProject = () => {
     if (!projectName.trim()) {
-      toast.error("Project name is required");
       return;
     }
 
-    // In a real app, this would create the project in your backend
-    toast.success("Project created successfully", {
-      description: `Created project: ${projectName}`,
-    });
-
-    // Generate a unique ID (in a real app this would come from the backend)
+    // Generate a unique ID
     const newProjectId = Date.now().toString();
     
-    // Close the dialog
-    setIsDialogOpen(false);
+    // Create new project
+    const newProject: ProjectCardProps = {
+      id: newProjectId,
+      title: projectName,
+      description: projectDescription || "No description provided",
+      progress: 0,
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      priority: projectPriority,
+      status: 'not-started',
+      members: [
+        { id: user?.id || '1', name: user?.name || 'Admin User', avatar: user?.avatar || 'https://i.pravatar.cc/150?img=68' },
+      ],
+    };
     
-    // Reset form
+    // Add to projects data in the local state of this component
+    projectsData.unshift(newProject);
+    
+    // Notify parent component
+    if (onProjectAdded) {
+      onProjectAdded(newProject);
+    }
+
+    // Close the dialog and reset form
+    setIsDialogOpen(false);
     setProjectName("");
     setProjectDescription("");
+    setProjectPriority("medium");
     
     // Navigate to the new project
     navigate(`/project/${newProjectId}`);
@@ -103,6 +122,24 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user }) => {
                 className="col-span-3"
                 placeholder="Describe your project"
               />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="priority" className="text-right">
+                Priority
+              </Label>
+              <Select 
+                value={projectPriority} 
+                onValueChange={(value) => setProjectPriority(value as "low" | "medium" | "high")}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
