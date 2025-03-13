@@ -14,12 +14,15 @@ import {
   Menu, 
   Search, 
   Settings, 
-  Clock, // Changed from Timeline to Clock
+  Clock, 
   User, 
   Users, 
   X 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import HelpPopover from './HelpPopover';
+import NotificationsPopover from './NotificationsPopover';
+import SearchModal from './SearchModal';
 
 interface NavItemProps {
   to: string;
@@ -60,13 +63,11 @@ const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const profileRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
 
   const navItems = [
     { path: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
-    { path: '/timeline', icon: <Clock size={20} />, label: 'Timeline' }, // Changed from Timeline to Clock
+    { path: '/timeline', icon: <Clock size={20} />, label: 'Timeline' },
     { path: '/calendar', icon: <Calendar size={20} />, label: 'Calendar' },
     { path: '/team', icon: <Users size={20} />, label: 'Team' },
     { path: '/reports', icon: <ClipboardList size={20} />, label: 'Reports' },
@@ -83,27 +84,6 @@ const Navbar: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  // Focus search input when opened
-  useEffect(() => {
-    if (isSearchOpen && searchRef.current) {
-      searchRef.current.focus();
-    }
-  }, [isSearchOpen]);
-
-  // Close search on escape key
-  useEffect(() => {
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsSearchOpen(false);
-      }
-    };
-
-    window.addEventListener('keydown', handleEsc);
-    return () => {
-      window.removeEventListener('keydown', handleEsc);
     };
   }, []);
 
@@ -137,44 +117,19 @@ const Navbar: React.FC = () => {
           {/* Right side menu */}
           <div className="flex items-center">
             {/* Search */}
-            <div className="relative mr-3">
-              {isSearchOpen ? (
-                <div className="absolute right-0 top-0 h-10 w-64 flex items-center bg-background border border-border rounded-md overflow-hidden animate-scale-in">
-                  <input
-                    ref={searchRef}
-                    type="text"
-                    placeholder="Search..."
-                    className="h-full w-full px-3 bg-transparent focus:outline-none"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <button
-                    onClick={() => setIsSearchOpen(false)}
-                    className="flex-shrink-0 h-full w-10 flex items-center justify-center text-muted-foreground hover:text-foreground"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setIsSearchOpen(true)}
-                  className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
-                >
-                  <Search size={20} />
-                </button>
-              )}
-            </div>
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors mr-3"
+            >
+              <Search size={20} />
+            </button>
+            <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
             {/* Help */}
-            <button className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors mr-3">
-              <HelpCircle size={20} />
-            </button>
+            <HelpPopover />
 
             {/* Notifications */}
-            <button className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors mr-3 relative">
-              <Bell size={20} />
-              <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full"></span>
-            </button>
+            <NotificationsPopover />
 
             {/* Profile dropdown */}
             <div className="relative" ref={profileRef}>
