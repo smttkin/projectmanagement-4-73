@@ -214,7 +214,7 @@ const CalendarPage = () => {
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="center">
                   <Calendar
-                    mode="month"
+                    mode="single"
                     defaultMonth={currentMonth}
                     onMonthChange={setCurrentMonth}
                     className="p-3 pointer-events-auto"
