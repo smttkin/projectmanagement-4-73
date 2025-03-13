@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
-import { format, addDays, subDays, startOfMonth, endOfMonth } from 'date-fns';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Filter, Plus, ClipboardList } from 'lucide-react';
+import { format, addDays, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, subMonths, startOfQuarter, endOfQuarter } from 'date-fns';
 import Navbar from '@/components/Navbar';
 import TimelineDisplay, { TimelineItem } from '@/components/TimelineDisplay';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,18 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 // Sample data for timeline items
 const sampleTimelineItems: TimelineItem[] = [
@@ -91,6 +103,15 @@ const sampleTimelineItems: TimelineItem[] = [
   }
 ];
 
+// Team members for assignment
+const teamMembers = [
+  { id: 'user1', name: 'Alice Johnson', avatar: 'https://i.pravatar.cc/150?img=1' },
+  { id: 'user2', name: 'Bob Smith', avatar: 'https://i.pravatar.cc/150?img=2' },
+  { id: 'user3', name: 'Charlie Brown', avatar: 'https://i.pravatar.cc/150?img=3' },
+  { id: 'user4', name: 'Diana Prince', avatar: 'https://i.pravatar.cc/150?img=4' },
+  { id: 'user5', name: 'Edward Norton', avatar: 'https://i.pravatar.cc/150?img=5' },
+];
+
 const Timeline = () => {
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>(sampleTimelineItems);
   const [viewMode, setViewMode] = useState<'week' | 'month' | 'quarter'>('month');
@@ -100,26 +121,115 @@ const Timeline = () => {
   });
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [isAddEventOpen, setIsAddEventOpen] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    startDate: new Date(),
+    endDate: new Date(new Date().setDate(new Date().getDate() + 7)),
+    status: 'not-started',
+    assigneeId: ''
+  });
   
-  // Handle changing the date range
+  // Handle changing the date range based on view mode
   const handlePrevPeriod = () => {
-    const { startDate, endDate } = dateRange;
-    const days = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    
-    setDateRange({
-      startDate: subDays(startDate, days),
-      endDate: subDays(endDate, days)
-    });
+    if (viewMode === 'week') {
+      setDateRange({
+        startDate: subDays(dateRange.startDate, 7),
+        endDate: subDays(dateRange.endDate, 7)
+      });
+    } else if (viewMode === 'month') {
+      const prevMonth = subMonths(dateRange.startDate, 1);
+      setDateRange({
+        startDate: startOfMonth(prevMonth),
+        endDate: endOfMonth(prevMonth)
+      });
+    } else if (viewMode === 'quarter') {
+      const prevQuarter = subMonths(dateRange.startDate, 3);
+      setDateRange({
+        startDate: startOfQuarter(prevQuarter),
+        endDate: endOfQuarter(prevQuarter)
+      });
+    }
   };
   
   const handleNextPeriod = () => {
-    const { startDate, endDate } = dateRange;
-    const days = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (viewMode === 'week') {
+      setDateRange({
+        startDate: addDays(dateRange.startDate, 7),
+        endDate: addDays(dateRange.endDate, 7)
+      });
+    } else if (viewMode === 'month') {
+      const nextMonth = addMonths(dateRange.startDate, 1);
+      setDateRange({
+        startDate: startOfMonth(nextMonth),
+        endDate: endOfMonth(nextMonth)
+      });
+    } else if (viewMode === 'quarter') {
+      const nextQuarter = addMonths(dateRange.startDate, 3);
+      setDateRange({
+        startDate: startOfQuarter(nextQuarter),
+        endDate: endOfQuarter(nextQuarter)
+      });
+    }
+  };
+  
+  // Change view mode
+  const handleViewModeChange = (mode: 'week' | 'month' | 'quarter') => {
+    setViewMode(mode);
     
-    setDateRange({
-      startDate: addDays(startDate, days),
-      endDate: addDays(endDate, days)
+    const currentDate = selectedDate || new Date();
+    
+    if (mode === 'week') {
+      setDateRange({
+        startDate: startOfWeek(currentDate),
+        endDate: endOfWeek(currentDate)
+      });
+    } else if (mode === 'month') {
+      setDateRange({
+        startDate: startOfMonth(currentDate),
+        endDate: endOfMonth(currentDate)
+      });
+    } else if (mode === 'quarter') {
+      setDateRange({
+        startDate: startOfQuarter(currentDate),
+        endDate: endOfQuarter(currentDate)
+      });
+    }
+  };
+  
+  // Handle creating a new event
+  const handleAddEvent = () => {
+    if (!newEvent.title) {
+      toast.error("Please enter an event title");
+      return;
+    }
+    
+    // Create new event with a unique ID
+    const newEventItem: TimelineItem = {
+      id: `event-${Date.now()}`,
+      title: newEvent.title,
+      startDate: newEvent.startDate,
+      endDate: newEvent.endDate,
+      status: newEvent.status as 'not-started' | 'in-progress' | 'completed' | 'at-risk',
+      assignee: newEvent.assigneeId ? 
+        teamMembers.find(member => member.id === newEvent.assigneeId) : 
+        undefined
+    };
+    
+    // Add the new event to the timeline
+    setTimelineItems([...timelineItems, newEventItem]);
+    
+    // Reset form and close modal
+    setNewEvent({
+      title: '',
+      startDate: new Date(),
+      endDate: new Date(new Date().setDate(new Date().getDate() + 7)),
+      status: 'not-started',
+      assigneeId: ''
     });
+    
+    setIsAddEventOpen(false);
+    toast.success("Event added to timeline");
   };
   
   // Filter timeline items based on selected status
@@ -162,10 +272,23 @@ const Timeline = () => {
                     onSelect={(date) => {
                       if (date) {
                         setSelectedDate(date);
-                        setDateRange({
-                          startDate: startOfMonth(date),
-                          endDate: endOfMonth(date)
-                        });
+                        
+                        if (viewMode === 'week') {
+                          setDateRange({
+                            startDate: startOfWeek(date),
+                            endDate: endOfWeek(date)
+                          });
+                        } else if (viewMode === 'month') {
+                          setDateRange({
+                            startDate: startOfMonth(date),
+                            endDate: endOfMonth(date)
+                          });
+                        } else if (viewMode === 'quarter') {
+                          setDateRange({
+                            startDate: startOfQuarter(date),
+                            endDate: endOfQuarter(date)
+                          });
+                        }
                       }
                     }}
                     initialFocus
@@ -177,6 +300,11 @@ const Timeline = () => {
               <Button variant="outline" size="sm" onClick={handleNextPeriod}>
                 Next
                 <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+              
+              <Button size="sm" onClick={() => setIsAddEventOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" />
+                Add Event
               </Button>
             </div>
           </div>
@@ -211,7 +339,7 @@ const Timeline = () => {
                       variant={viewMode === mode ? "default" : "outline"}
                       size="sm"
                       className="h-8 px-3"
-                      onClick={() => setViewMode(mode)}
+                      onClick={() => handleViewModeChange(mode)}
                     >
                       {mode.charAt(0).toUpperCase() + mode.slice(1)}
                     </Button>
@@ -243,6 +371,125 @@ const Timeline = () => {
           </div>
         </div>
       </main>
+      
+      {/* Add Event Dialog */}
+      <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Create New Event</DialogTitle>
+            <DialogDescription>
+              Add a new event to your project timeline.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="title" className="text-right">
+                Title
+              </Label>
+              <Input
+                id="title"
+                value={newEvent.title}
+                onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
+                placeholder="Enter event title"
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="startDate" className="text-right">
+                Start Date
+              </Label>
+              <div className="col-span-3">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {format(newEvent.startDate, 'PPP')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={newEvent.startDate}
+                      onSelect={(date) => date && setNewEvent({...newEvent, startDate: date})}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="endDate" className="text-right">
+                End Date
+              </Label>
+              <div className="col-span-3">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {format(newEvent.endDate, 'PPP')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={newEvent.endDate}
+                      onSelect={(date) => date && setNewEvent({...newEvent, endDate: date})}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="status" className="text-right">
+                Status
+              </Label>
+              <select 
+                id="status"
+                value={newEvent.status}
+                onChange={(e) => setNewEvent({...newEvent, status: e.target.value})}
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="not-started">Not Started</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="at-risk">At Risk</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="assignee" className="text-right">
+                Assignee
+              </Label>
+              <select 
+                id="assignee"
+                value={newEvent.assigneeId}
+                onChange={(e) => setNewEvent({...newEvent, assigneeId: e.target.value})}
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">Unassigned</option>
+                {teamMembers.map((member) => (
+                  <option key={member.id} value={member.id}>{member.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleAddEvent}>
+              <ClipboardList className="mr-2 h-4 w-4" />
+              Create Event
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
