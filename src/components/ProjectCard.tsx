@@ -60,15 +60,29 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     if (onClick) {
       onClick();
     } else {
-      toast(`Viewing project: ${title}`);
-      // In a real app, we would navigate to the project detail page
-      // navigate(`/projects/${id}`);
+      toast.info(`Viewing project: ${title}`, {
+        description: "Navigating to project details page",
+        action: {
+          label: "View Details",
+          onClick: () => navigate(`/project/${id}`),
+        },
+      });
+      
+      // Navigate to the project detail page
+      navigate(`/project/${id}`);
     }
   };
   
   const handleMoreClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent the card click from triggering
-    toast(`Project options for: ${title}`);
+    
+    toast.info(`Project options for: ${title}`, {
+      description: "Choose an action below",
+      action: {
+        label: "Edit",
+        onClick: () => navigate(`/project/${id}/edit`),
+      },
+    });
   };
   
   return (
