@@ -9,6 +9,9 @@ import {
   User 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { toast } from "sonner";
+import { useNavigate } from 'react-router-dom';
 
 export interface ProjectCardProps {
   id: string;
@@ -50,12 +53,28 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   members,
   onClick
 }) => {
+  const navigate = useNavigate();
   const StatusIcon = statusConfig[status].icon;
+  
+  const handleCardClick = () => {
+    if (onClick) {
+      onClick();
+    } else {
+      toast(`Viewing project: ${title}`);
+      // In a real app, we would navigate to the project detail page
+      // navigate(`/projects/${id}`);
+    }
+  };
+  
+  const handleMoreClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent the card click from triggering
+    toast(`Project options for: ${title}`);
+  };
   
   return (
     <div 
-      className="bg-card border border-border rounded-xl shadow-subtle hover:shadow-card transition-all duration-300 overflow-hidden interactive"
-      onClick={onClick}
+      className="bg-card border border-border rounded-xl shadow-subtle hover:shadow-card transition-all duration-300 overflow-hidden interactive cursor-pointer"
+      onClick={handleCardClick}
     >
       <div className="p-5">
         <div className="flex justify-between items-start mb-3">
@@ -63,7 +82,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             <h3 className="text-lg font-semibold line-clamp-1 mb-1">{title}</h3>
             <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{description}</p>
           </div>
-          <button className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/30 transition-colors">
+          <button 
+            className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/30 transition-colors"
+            onClick={handleMoreClick}
+          >
             <MoreHorizontal size={18} className="text-muted-foreground" />
           </button>
         </div>
