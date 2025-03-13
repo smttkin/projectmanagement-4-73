@@ -9,10 +9,8 @@ import {
   Search, 
   Filter, 
   UserRound,
-  CheckCircle2,
-  X
+  CheckCircle2
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -39,17 +37,6 @@ import {
 } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
 
 // Mock team members data
 const teamMembers = [
@@ -120,16 +107,8 @@ const departmentSummary = [
 ];
 
 const Team = () => {
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredMembers, setFilteredMembers] = useState(teamMembers);
-  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
-  const [newMember, setNewMember] = useState({
-    name: '',
-    email: '',
-    role: '',
-    department: 'Engineering'
-  });
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value.toLowerCase();
@@ -151,44 +130,6 @@ const Team = () => {
     setFilteredMembers(filtered);
   };
 
-  const handleAddMember = () => {
-    // Validate form fields
-    if (!newMember.name || !newMember.email || !newMember.role) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-
-    // In a real app, this would make an API call to add the member to the database
-    toast.success(`${newMember.name} has been added to the team`);
-    setIsAddMemberModalOpen(false);
-    
-    // Reset form
-    setNewMember({
-      name: '',
-      email: '',
-      role: '',
-      department: 'Engineering'
-    });
-  };
-
-  const handleViewProfile = (memberId: number) => {
-    // In a real app, this would navigate to the member's profile page
-    toast.info("Viewing team member profile");
-    navigate('/profile', { state: { memberId } });
-  };
-
-  const handleSendEmail = (email: string) => {
-    toast.info(`Composing email to ${email}`);
-    // In a real app, this might open a mail client or an in-app composer
-    window.open(`mailto:${email}`);
-  };
-
-  const handleCall = (phone: string) => {
-    toast.info(`Calling ${phone}`);
-    // In a real app, this might trigger a call through a web interface or open a phone app
-    window.open(`tel:${phone}`);
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -198,7 +139,7 @@ const Team = () => {
             <h1 className="text-3xl font-bold tracking-tight">Team</h1>
             <p className="text-muted-foreground mt-1">Manage your team members and their access</p>
           </div>
-          <Button className="mt-4 md:mt-0" onClick={() => setIsAddMemberModalOpen(true)}>
+          <Button className="mt-4 md:mt-0">
             <UserPlus className="mr-2 h-4 w-4" />
             Add Team Member
           </Button>
@@ -293,15 +234,15 @@ const Team = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleViewProfile(member.id)}>
+                          <DropdownMenuItem>
                             <UserRound className="mr-2 h-4 w-4" />
                             View Profile
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleSendEmail(member.email)}>
+                          <DropdownMenuItem>
                             <Mail className="mr-2 h-4 w-4" />
                             Send Email
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleCall(member.phone)}>
+                          <DropdownMenuItem>
                             <Phone className="mr-2 h-4 w-4" />
                             Call
                           </DropdownMenuItem>
@@ -315,75 +256,6 @@ const Team = () => {
           </CardContent>
         </Card>
       </main>
-
-      {/* Add Team Member Modal */}
-      <Dialog open={isAddMemberModalOpen} onOpenChange={setIsAddMemberModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Add Team Member</DialogTitle>
-            <DialogDescription>
-              Add a new member to your team. They will receive an email invitation.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="name"
-                value={newMember.name}
-                onChange={(e) => setNewMember({...newMember, name: e.target.value})}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="email" className="text-right">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={newMember.email}
-                onChange={(e) => setNewMember({...newMember, email: e.target.value})}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="role" className="text-right">
-                Role
-              </Label>
-              <Input
-                id="role"
-                value={newMember.role}
-                onChange={(e) => setNewMember({...newMember, role: e.target.value})}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="department" className="text-right">
-                Department
-              </Label>
-              <select 
-                id="department"
-                value={newMember.department}
-                onChange={(e) => setNewMember({...newMember, department: e.target.value})}
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {departmentSummary.map((dept) => (
-                  <option key={dept.name} value={dept.name}>{dept.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DialogClose>
-            <Button type="submit" onClick={handleAddMember}>Add Member</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

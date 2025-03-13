@@ -66,34 +66,21 @@ const HelpPopover = () => {
   // Handle opening a help topic
   const handleOpenTopic = (topicId: string) => {
     // In a real app, this would navigate to the help center or open a modal with the topic content
-    const topic = HELP_TOPICS.find(t => t.id === topicId);
-    if (topic) {
-      toast.info(`Opening help topic: ${topic.title}`);
-    }
+    toast.info(`Opening help topic: ${topicId}`);
     setIsOpen(false);
   };
 
   // Handle contacting support
   const handleContactSupport = () => {
     // In a real app, this would open a support ticket form or chat
-    toast.success("Opening support chat window");
-    // Simulate opening a chat window
-    setTimeout(() => {
-      toast("Live agent connected!", {
-        description: "How can we help you today?",
-        action: {
-          label: "Reply",
-          onClick: () => toast.info("Redirecting to chat window"),
-        },
-      });
-    }, 1500);
+    toast.info("Opening support chat window");
     setIsOpen(false);
   };
 
   // Handle opening documentation
   const handleOpenDocumentation = () => {
     // In a real app, this would open the documentation in a new tab
-    toast.info("Opening documentation in new tab");
+    toast.info("Opening documentation");
     window.open("https://example.com/docs", "_blank");
     setIsOpen(false);
   };
