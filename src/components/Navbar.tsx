@@ -14,7 +14,7 @@ import {
   Menu, 
   Search, 
   Settings, 
-  Timeline, 
+  Clock, // Changed from Timeline to Clock
   User, 
   Users, 
   X 
@@ -66,7 +66,7 @@ const Navbar: React.FC = () => {
 
   const navItems = [
     { path: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
-    { path: '/timeline', icon: <Timeline size={20} />, label: 'Timeline' },
+    { path: '/timeline', icon: <Clock size={20} />, label: 'Timeline' }, // Changed from Timeline to Clock
     { path: '/calendar', icon: <Calendar size={20} />, label: 'Calendar' },
     { path: '/team', icon: <Users size={20} />, label: 'Team' },
     { path: '/reports', icon: <ClipboardList size={20} />, label: 'Reports' },
