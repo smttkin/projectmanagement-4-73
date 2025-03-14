@@ -95,7 +95,7 @@ const Dashboard = () => {
             value={atRiskProjects}
             icon={Clock}
             color="red"
-            change={{ value: atRiskProjects, type: atRiskProjects > 0 ? 'increase' : 'normal' }}
+            change={{ value: atRiskProjects, type: atRiskProjects > 0 ? 'increase' : 'neutral' }}
           />
         </div>
         
