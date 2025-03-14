@@ -99,9 +99,38 @@ export const calculateTaskProgress = (totalTasks: number, completedTasks: number
   return Math.round((completedTasks / totalTasks) * 100);
 };
 
+// Aggregated progress calculation
+export const calculateAggregatedProgress = (
+  taskProgress: number, 
+  meetingsCount: number, 
+  timeEntriesCount: number,
+  weights = { tasks: 5, meetings: 2, timeEntries: 3 }
+): number => {
+  // Create weighted factors for progress calculation
+  const factors = [
+    // Tasks have the highest weight in progress
+    { value: taskProgress, weight: weights.tasks },
+    // Meetings contribute to progress (max 100%)
+    { value: Math.min(meetingsCount * 10, 100), weight: weights.meetings },
+    // Time tracking contributes to progress (max 100%)
+    { value: Math.min(timeEntriesCount * 10, 100), weight: weights.timeEntries }
+  ];
+  
+  // Calculate weighted average progress
+  const totalWeight = factors.reduce((sum, factor) => sum + factor.weight, 0);
+  if (totalWeight === 0) return 0;
+  
+  const weightedSum = factors.reduce((sum, factor) => {
+    return sum + (factor.value * factor.weight);
+  }, 0);
+  
+  return Math.round(weightedSum / totalWeight);
+};
+
 export default {
   getStatusConfig,
   getProgressColorClass,
   determineProjectStatus,
-  calculateTaskProgress
+  calculateTaskProgress,
+  calculateAggregatedProgress
 };

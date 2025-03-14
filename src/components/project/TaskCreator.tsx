@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { CheckCircle2, Circle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,23 +25,23 @@ interface Task {
 interface TaskCreatorProps {
   projectId: string;
   onTaskCreated?: () => void;
+  onTasksUpdated?: (totalTasks: number, completedTasks: number) => void;
 }
 
 const TaskCreator: React.FC<TaskCreatorProps> = ({ 
   projectId,
-  onTaskCreated 
+  onTaskCreated,
+  onTasksUpdated
 }) => {
   const [newTask, setNewTask] = useState('');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [taskFilter, setTaskFilter] = useState<'all' | 'active' | 'completed'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Load tasks from localStorage on component mount
   useEffect(() => {
     const storedTasks = localStorage.getItem(`tasks-${projectId}`);
     if (storedTasks) {
       try {
-        // Convert stored strings back to Date objects
         const parsedTasks = JSON.parse(storedTasks, (key, value) => {
           if (key === 'createdAt') return new Date(value);
           return value;
@@ -54,12 +53,16 @@ const TaskCreator: React.FC<TaskCreatorProps> = ({
     }
   }, [projectId]);
   
-  // Save tasks to localStorage whenever they change
   useEffect(() => {
     if (tasks.length > 0) {
       localStorage.setItem(`tasks-${projectId}`, JSON.stringify(tasks));
+      
+      const completedCount = tasks.filter(task => task.completed).length;
+      if (onTasksUpdated) {
+        onTasksUpdated(tasks.length, completedCount);
+      }
     }
-  }, [tasks, projectId]);
+  }, [tasks, projectId, onTasksUpdated]);
   
   const handleAddTask = () => {
     if (!newTask.trim()) {
@@ -100,7 +103,6 @@ const TaskCreator: React.FC<TaskCreatorProps> = ({
     toast.success("Task deleted");
   };
   
-  // Filter and search tasks
   const filteredTasks = tasks.filter(task => {
     const matchesFilter = 
       taskFilter === 'all' || 
@@ -112,7 +114,6 @@ const TaskCreator: React.FC<TaskCreatorProps> = ({
     return matchesFilter && matchesSearch;
   });
   
-  // Calculate task completion stats
   const completedTasks = tasks.filter(task => task.completed).length;
   const totalTasks = tasks.length;
   const completionPercentage = totalTasks > 0 

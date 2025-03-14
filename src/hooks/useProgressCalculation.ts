@@ -100,6 +100,13 @@ export function useProgressCalculation(options: ProgressOptions = {}) {
   const resetProgress = useCallback(() => {
     updateProgress(initialValue);
   }, [initialValue, updateProgress]);
+  
+  // Clear localStorage for this progress if exists
+  const clearPersistedProgress = useCallback(() => {
+    if (persistKey) {
+      localStorage.removeItem(persistKey);
+    }
+  }, [persistKey]);
 
   // Set initial validated value when initialValue changes
   useEffect(() => {
@@ -115,6 +122,7 @@ export function useProgressCalculation(options: ProgressOptions = {}) {
     calculatePercentage,
     calculateWeightedProgress,
     resetProgress,
+    clearPersistedProgress,
   };
 }
 
