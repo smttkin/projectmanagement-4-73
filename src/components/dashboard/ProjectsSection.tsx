@@ -4,6 +4,7 @@ import { FileCheck, Plus, Trash2 } from 'lucide-react';
 import ProjectCard, { ProjectCardProps } from '../ProjectCard';
 import { Button } from '../ui/button';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 type StatusFilter = 'all' | 'completed' | 'in-progress' | 'not-started' | 'at-risk';
 
@@ -14,17 +15,16 @@ interface ProjectsSectionProps {
 
 const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects: propProjects, onProjectDeleted }) => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [projects, setProjects] = useState<ProjectCardProps[]>(propProjects);
   const navigate = useNavigate();
 
   // Handle project deletion
   const handleDeleteProject = (id: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
-    setProjects(currentProjects => currentProjects.filter(project => project.id !== id));
-    
+
     // Notify parent component about deletion
     if (onProjectDeleted) {
       onProjectDeleted(id);
+      toast.success("Project deleted successfully");
     }
   };
   

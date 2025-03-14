@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Check } from 'lucide-react';
 import { ProjectCardProps } from '../ProjectCard';
+import ProjectProgress from '../ProjectProgress';
 
 interface ProgressSectionProps {
   projects: ProjectCardProps[];
@@ -9,6 +10,12 @@ interface ProgressSectionProps {
 }
 
 const ProgressSection: React.FC<ProgressSectionProps> = ({ projects, avgProgressPercentage }) => {
+  // Calculate projects with high progress (>70%)
+  const highProgressProjects = projects.filter(p => p.progress > 70).length;
+  
+  // Calculate projects due this week (simplified logic)
+  const projectsDueSoon = 3; // This would ideally be calculated from actual due dates
+  
   return (
     <div className="bg-card border border-border rounded-xl shadow-subtle overflow-hidden">
       <div className="p-5 border-b border-border">
@@ -27,19 +34,19 @@ const ProgressSection: React.FC<ProgressSectionProps> = ({ projects, avgProgress
             </div>
           </div>
           <div className="bg-muted/30 rounded-lg p-4 border border-border">
-            <h4 className="text-sm font-medium text-muted-foreground mb-1">Team Members</h4>
+            <h4 className="text-sm font-medium text-muted-foreground mb-1">High Progress</h4>
             <div className="flex items-end">
-              <span className="text-3xl font-bold">7</span>
+              <span className="text-3xl font-bold">{highProgressProjects}</span>
               <span className="text-xs text-green-600 font-medium ml-2 pb-1 flex items-center">
-                <ArrowUpRight size={12} className="mr-0.5" />
-                2
+                <Check size={12} className="mr-0.5" />
+                Projects
               </span>
             </div>
           </div>
           <div className="bg-muted/30 rounded-lg p-4 border border-border">
             <h4 className="text-sm font-medium text-muted-foreground mb-1">Projects Due Soon</h4>
             <div className="flex items-end">
-              <span className="text-3xl font-bold">3</span>
+              <span className="text-3xl font-bold">{projectsDueSoon}</span>
               <span className="text-xs text-muted-foreground font-medium ml-2 pb-1">
                 this week
               </span>
@@ -63,7 +70,7 @@ const ProgressSection: React.FC<ProgressSectionProps> = ({ projects, avgProgress
                           ? 'bg-red-500'
                           : 'bg-orange-500'
                   }`}></div>
-                  <div className="ml-4">
+                  <div className="ml-4 flex-1">
                     <div className="flex items-center">
                       <h4 className="font-medium">{project.title}</h4>
                       <span className="text-xs text-muted-foreground ml-2">
@@ -71,22 +78,12 @@ const ProgressSection: React.FC<ProgressSectionProps> = ({ projects, avgProgress
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {project.description}
+                      {project.description.length > 100 
+                        ? `${project.description.substring(0, 100)}...` 
+                        : project.description}
                     </p>
-                    <div className="flex items-center mt-2">
-                      <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full ${
-                            project.progress === 100 
-                              ? 'bg-green-500' 
-                              : 'bg-primary'
-                          }`}
-                          style={{ width: `${project.progress}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-xs text-muted-foreground ml-2">
-                        {project.progress}%
-                      </span>
+                    <div className="mt-2">
+                      <ProjectProgress progress={project.progress} size="sm" />
                     </div>
                   </div>
                 </div>
