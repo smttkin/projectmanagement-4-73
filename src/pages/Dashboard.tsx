@@ -58,6 +58,11 @@ const Dashboard = () => {
   const handleProjectAdded = (newProject: ProjectCardProps) => {
     setProjects(prevProjects => [newProject, ...prevProjects]);
   };
+
+  // Handle project deletion
+  const handleProjectDeleted = (id: string) => {
+    setProjects(prevProjects => prevProjects.filter(project => project.id !== id));
+  };
   
   return (
     <div className="min-h-screen bg-background">
@@ -103,7 +108,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Projects Section - Takes up 2/3 of the grid on large screens */}
           <div className="lg:col-span-2">
-            <ProjectsSection projects={projects} />
+            <ProjectsSection projects={projects} onProjectDeleted={handleProjectDeleted} />
             <ProgressSection projects={projects} avgProgressPercentage={avgProgressPercentage} />
           </div>
           

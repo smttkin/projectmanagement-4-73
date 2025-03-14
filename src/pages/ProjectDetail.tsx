@@ -10,7 +10,9 @@ import {
   Edit, 
   Save, 
   Trash2, 
-  Users 
+  Users,
+  Plus,
+  X
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -24,9 +26,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose
+} from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from 'date-fns';
 
 // Importing mock data to find the project
 import { projectsData } from '@/data/projects';
+
+interface Member {
+  id: string;
+  name: string;
+  avatar?: string;
+}
 
 interface ProjectDetailProps {
   edit?: boolean;
@@ -44,6 +70,18 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ edit = false }) => {
     priority: '',
     dueDate: '',
   });
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [newTask, setNewTask] = useState('');
+  const [timeTracking, setTimeTracking] = useState({
+    hours: 0,
+    minutes: 0,
+    description: ''
+  });
+  const [teamMembers, setTeamMembers] = useState<Member[]>([]);
+  const [newMember, setNewMember] = useState({
+    name: '',
+    role: 'Team Member'
+  });
 
   useEffect(() => {
     // In a real app, this would be an API call
@@ -58,6 +96,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ edit = false }) => {
         priority: foundProject.priority,
         dueDate: foundProject.dueDate,
       });
+      setTeamMembers(foundProject.members);
     } else {
       toast.error("Project not found");
       navigate('/dashboard');
@@ -89,6 +128,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ edit = false }) => {
         status: formData.status as any,
         priority: formData.priority as any,
         dueDate: formData.dueDate,
+        members: teamMembers
       });
     }
   };
@@ -98,6 +138,76 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ edit = false }) => {
       description: "The project has been removed.",
     });
     navigate('/dashboard');
+  };
+
+  const handleAddMember = () => {
+    if (!newMember.name.trim()) {
+      toast.error("Please enter a member name");
+      return;
+    }
+    
+    const newId = `member-${Date.now()}`;
+    const memberToAdd: Member = {
+      id: newId,
+      name: newMember.name,
+      avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`
+    };
+    
+    setTeamMembers(prev => [...prev, memberToAdd]);
+    setNewMember({ name: '', role: 'Team Member' });
+    toast.success("Team member added");
+  };
+
+  const handleRemoveMember = (memberId: string) => {
+    setTeamMembers(prev => prev.filter(member => member.id !== memberId));
+    toast.success("Team member removed");
+  };
+
+  const handleScheduleMeeting = () => {
+    if (!selectedDate) {
+      toast.error("Please select a date");
+      return;
+    }
+    toast.success("Meeting scheduled", {
+      description: `Meeting scheduled for ${format(selectedDate, 'MMMM d, yyyy')}`,
+    });
+  };
+
+  const handleAddTask = () => {
+    if (!newTask.trim()) {
+      toast.error("Please enter a task description");
+      return;
+    }
+    toast.success("Task added", {
+      description: `New task "${newTask}" has been added to the project.`,
+    });
+    setNewTask('');
+  };
+
+  const handleTrackTime = () => {
+    if (timeTracking.hours === 0 && timeTracking.minutes === 0) {
+      toast.error("Please enter time");
+      return;
+    }
+    
+    let timeDescription = '';
+    if (timeTracking.hours > 0) {
+      timeDescription += `${timeTracking.hours} hour${timeTracking.hours > 1 ? 's' : ''}`;
+    }
+    if (timeTracking.minutes > 0) {
+      if (timeDescription) timeDescription += ' and ';
+      timeDescription += `${timeTracking.minutes} minute${timeTracking.minutes > 1 ? 's' : ''}`;
+    }
+    
+    toast.success("Time tracked", {
+      description: `${timeDescription} tracked for this project.`,
+    });
+    
+    setTimeTracking({
+      hours: 0,
+      minutes: 0,
+      description: ''
+    });
   };
 
   if (!project) {
@@ -280,22 +390,79 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ edit = false }) => {
           
           <div>
             <div className="bg-card border border-border rounded-xl shadow-subtle overflow-hidden mb-6">
-              <div className="p-5 border-b border-border">
+              <div className="p-5 border-b border-border flex justify-between items-center">
                 <h2 className="text-xl font-semibold">Team Members</h2>
+                {isEditing && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Plus className="h-4 w-4 mr-1" /> Add
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add Team Member</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 py-3">
+                        <div>
+                          <Label htmlFor="memberName">Member Name</Label>
+                          <Input 
+                            id="memberName"
+                            value={newMember.name} 
+                            onChange={(e) => setNewMember({...newMember, name: e.target.value})}
+                            placeholder="Enter member name"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="memberRole">Role</Label>
+                          <Select 
+                            value={newMember.role} 
+                            onValueChange={(value) => setNewMember({...newMember, role: value})}
+                          >
+                            <SelectTrigger id="memberRole">
+                              <SelectValue placeholder="Select role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Project Manager">Project Manager</SelectItem>
+                              <SelectItem value="Team Member">Team Member</SelectItem>
+                              <SelectItem value="Designer">Designer</SelectItem>
+                              <SelectItem value="Developer">Developer</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <DialogClose asChild>
+                        <Button onClick={handleAddMember}>Add Member</Button>
+                      </DialogClose>
+                    </DialogContent>
+                  </Dialog>
+                )}
               </div>
               
               <div className="p-5">
                 <ul className="space-y-3">
-                  {project.members.map(member => (
-                    <li key={member.id} className="flex items-center">
-                      <div className="h-8 w-8 rounded-full bg-muted mr-3 overflow-hidden flex items-center justify-center">
-                        {member.avatar ? (
-                          <img src={member.avatar} alt={member.name} className="h-full w-full object-cover" />
-                        ) : (
-                          <Users className="h-4 w-4 text-muted-foreground" />
-                        )}
+                  {teamMembers.map(member => (
+                    <li key={member.id} className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className="h-8 w-8 rounded-full bg-muted mr-3 overflow-hidden flex items-center justify-center">
+                          {member.avatar ? (
+                            <img src={member.avatar} alt={member.name} className="h-full w-full object-cover" />
+                          ) : (
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        <span>{member.name}</span>
                       </div>
-                      <span>{member.name}</span>
+                      {isEditing && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-7 w-7 p-0" 
+                          onClick={() => handleRemoveMember(member.id)}
+                        >
+                          <X className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -309,18 +476,108 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ edit = false }) => {
               
               <div className="p-5">
                 <div className="space-y-2">
-                  <Button className="w-full justify-start" variant="outline">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    Schedule Meeting
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline">
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Add Task
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline">
-                    <Clock className="mr-2 h-4 w-4" />
-                    Track Time
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button className="w-full justify-start" variant="outline">
+                        <Calendar className="mr-2 h-4 w-4" />
+                        Schedule Meeting
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Schedule a Meeting</DialogTitle>
+                      </DialogHeader>
+                      <div className="py-4">
+                        <CalendarComponent
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={setSelectedDate}
+                          className="mx-auto"
+                        />
+                      </div>
+                      <DialogClose asChild>
+                        <Button onClick={handleScheduleMeeting}>Schedule Meeting</Button>
+                      </DialogClose>
+                    </DialogContent>
+                  </Dialog>
+                  
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button className="w-full justify-start" variant="outline">
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                        Add Task
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add New Task</DialogTitle>
+                      </DialogHeader>
+                      <div className="py-4">
+                        <Label htmlFor="taskName">Task Description</Label>
+                        <Textarea 
+                          id="taskName"
+                          value={newTask} 
+                          onChange={(e) => setNewTask(e.target.value)}
+                          placeholder="Describe the task..."
+                          className="h-24"
+                        />
+                      </div>
+                      <DialogClose asChild>
+                        <Button onClick={handleAddTask}>Add Task</Button>
+                      </DialogClose>
+                    </DialogContent>
+                  </Dialog>
+                  
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button className="w-full justify-start" variant="outline">
+                        <Clock className="mr-2 h-4 w-4" />
+                        Track Time
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Track Time</DialogTitle>
+                      </DialogHeader>
+                      <div className="py-4 space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="hours">Hours</Label>
+                            <Input 
+                              id="hours"
+                              type="number" 
+                              min="0"
+                              value={timeTracking.hours} 
+                              onChange={(e) => setTimeTracking({...timeTracking, hours: parseInt(e.target.value) || 0})}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="minutes">Minutes</Label>
+                            <Input 
+                              id="minutes"
+                              type="number" 
+                              min="0"
+                              max="59"
+                              value={timeTracking.minutes} 
+                              onChange={(e) => setTimeTracking({...timeTracking, minutes: parseInt(e.target.value) || 0})}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="timeDescription">Description (optional)</Label>
+                          <Input 
+                            id="timeDescription"
+                            value={timeTracking.description} 
+                            onChange={(e) => setTimeTracking({...timeTracking, description: e.target.value})}
+                            placeholder="What were you working on?"
+                          />
+                        </div>
+                      </div>
+                      <DialogClose asChild>
+                        <Button onClick={handleTrackTime}>Log Time</Button>
+                      </DialogClose>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             </div>

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Calendar, ChevronsRight } from 'lucide-react';
 import { format } from 'date-fns';
-import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface Deadline {
   id: string;
@@ -16,8 +16,10 @@ interface DeadlinesSectionProps {
 }
 
 const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines }) => {
+  const navigate = useNavigate();
+
   const handleCalendarView = () => {
-    toast.info("Opening calendar view");
+    navigate('/calendar');
   };
 
   return (
@@ -37,7 +39,8 @@ const DeadlinesSection: React.FC<DeadlinesSectionProps> = ({ deadlines }) => {
           {deadlines.map(deadline => (
             <div 
               key={deadline.id} 
-              className="p-3 border border-border rounded-lg hover:border-primary/30 hover:bg-accent/30 transition-colors"
+              className="p-3 border border-border rounded-lg hover:border-primary/30 hover:bg-accent/30 transition-colors cursor-pointer"
+              onClick={() => navigate(`/project/${deadline.id}`)}
             >
               <div className="flex justify-between items-start">
                 <div>

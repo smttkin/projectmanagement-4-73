@@ -4,15 +4,15 @@ import { FileCheck, Plus, Trash2 } from 'lucide-react';
 import ProjectCard, { ProjectCardProps } from '../ProjectCard';
 import { Button } from '../ui/button';
 import { useNavigate } from 'react-router-dom';
-import { projectsData as initialProjectsData } from '../../data/projects';
 
 type StatusFilter = 'all' | 'completed' | 'in-progress' | 'not-started' | 'at-risk';
 
 interface ProjectsSectionProps {
   projects: ProjectCardProps[];
+  onProjectDeleted?: (id: string) => void;
 }
 
-const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects: propProjects }) => {
+const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects: propProjects, onProjectDeleted }) => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [projects, setProjects] = useState<ProjectCardProps[]>(propProjects);
   const navigate = useNavigate();
@@ -21,12 +21,17 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects: propProject
   const handleDeleteProject = (id: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
     setProjects(currentProjects => currentProjects.filter(project => project.id !== id));
+    
+    // Notify parent component about deletion
+    if (onProjectDeleted) {
+      onProjectDeleted(id);
+    }
   };
   
   // Filter projects based on selected status
   const filteredProjects = statusFilter === 'all'
-    ? projects
-    : projects.filter(project => project.status === statusFilter);
+    ? propProjects // Use the prop directly to ensure latest state
+    : propProjects.filter(project => project.status === statusFilter);
 
   return (
     <div className="bg-card border border-border rounded-xl shadow-subtle overflow-hidden mb-6">

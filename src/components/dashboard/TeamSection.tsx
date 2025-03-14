@@ -1,16 +1,18 @@
 
 import React from 'react';
 import { ChevronsRight, Users } from 'lucide-react';
-import { toast } from 'sonner';
 import { ProjectCardProps } from '../ProjectCard';
+import { useNavigate } from 'react-router-dom';
 
 interface TeamSectionProps {
   projects: ProjectCardProps[];
 }
 
 const TeamSection: React.FC<TeamSectionProps> = ({ projects }) => {
+  const navigate = useNavigate();
+
   const handleViewAllTeam = () => {
-    toast.info("Viewing all team members");
+    navigate('/team');
   };
 
   return (
