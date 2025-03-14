@@ -59,7 +59,49 @@ export const getProgressColorClass = (progress: number): string => {
   return 'bg-red-500';
 };
 
+// Determine status based on progress and due date
+export const determineProjectStatus = (
+  progress: number, 
+  dueDate: Date | string,
+  isOnHold?: boolean
+): ProjectStatus => {
+  if (isOnHold) return 'on-hold';
+  
+  if (progress >= 100) return 'completed';
+  
+  // Convert string date to Date object if needed
+  const dueDateObj = typeof dueDate === 'string' 
+    ? new Date(dueDate) 
+    : dueDate;
+  
+  const today = new Date();
+  const timeDiff = dueDateObj.getTime() - today.getTime();
+  const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
+  
+  // If date is in the past and progress < 100%, it's at risk
+  if (daysRemaining < 0 && progress < 100) {
+    return 'at-risk';
+  }
+  
+  // If less than 3 days remaining but progress is below 80%, it's at risk
+  if (daysRemaining <= 3 && progress < 80) {
+    return 'at-risk';
+  }
+  
+  if (progress === 0) return 'not-started';
+  
+  return 'in-progress';
+};
+
+// Calculate total percentage based on tasks
+export const calculateTaskProgress = (totalTasks: number, completedTasks: number): number => {
+  if (totalTasks === 0) return 0;
+  return Math.round((completedTasks / totalTasks) * 100);
+};
+
 export default {
   getStatusConfig,
-  getProgressColorClass
+  getProgressColorClass,
+  determineProjectStatus,
+  calculateTaskProgress
 };
