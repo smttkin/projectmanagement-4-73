@@ -107,7 +107,6 @@ const StatusCard: React.FC<StatusCardProps> = ({
         </div>
       </div>
       
-      {/* Decorative element */}
       <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-transparent to-transparent group-hover:from-transparent group-hover:via-primary group-hover:to-transparent transition-all duration-500"></div>
     </div>
   );
