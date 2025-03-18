@@ -32,11 +32,17 @@ const mockUsers = [
   },
 ];
 
+// Store mock users in local storage if they don't exist
+if (!localStorage.getItem('mockUsers')) {
+  localStorage.setItem('mockUsers', JSON.stringify(mockUsers));
+}
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
+  signup: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -72,8 +78,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Simulate API call delay
     return new Promise((resolve) => {
       setTimeout(() => {
-        const foundUser = mockUsers.find(
-          (u) => u.email === email && u.password === password
+        // Get users from local storage
+        const storedUsers = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+        
+        const foundUser = storedUsers.find(
+          (u: any) => u.email === email && u.password === password
         );
         
         if (foundUser) {
@@ -102,6 +111,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  const signup = async (name: string, email: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
+    
+    // Simulate API call delay
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Get current users from local storage
+        const storedUsers = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+        
+        // Check if email already exists
+        const existingUser = storedUsers.find((u: any) => u.email === email);
+        
+        if (existingUser) {
+          toast.error('Signup failed', {
+            description: 'Email already in use',
+          });
+          
+          setIsLoading(false);
+          resolve(false);
+          return;
+        }
+        
+        // Create new user
+        const newUser = {
+          id: `${storedUsers.length + 1}`,
+          email,
+          password,
+          name,
+          avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,
+          role: 'member' as const,
+        };
+        
+        // Add user to mock database
+        storedUsers.push(newUser);
+        localStorage.setItem('mockUsers', JSON.stringify(storedUsers));
+        
+        // Create user object (excluding password)
+        const { password: _, ...userWithoutPassword } = newUser;
+        setUser(userWithoutPassword);
+        
+        // Store in localStorage (in a real app, you'd use a token)
+        localStorage.setItem('user', JSON.stringify(userWithoutPassword));
+        
+        toast.success('Account created successfully', {
+          description: `Welcome, ${userWithoutPassword.name}!`,
+        });
+        
+        setIsLoading(false);
+        resolve(true);
+      }, 1000);
+    });
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
@@ -114,6 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: !!user,
     isLoading,
     login,
+    signup,
     logout,
   };
 

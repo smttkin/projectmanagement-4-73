@@ -1,19 +1,27 @@
+
 import React, { useState, useEffect } from 'react';
 import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react';
+import { Eye, EyeOff, LockKeyhole, Mail, User, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 
-const Login = () => {
-  const { isAuthenticated, login, isLoading } = useAuth();
+const Signup = () => {
+  const { isAuthenticated, signup, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [animateShapes, setAnimateShapes] = useState(false);
 
+  // Start animation after component mounts
   useEffect(() => {
     const timer = setTimeout(() => {
       setAnimateShapes(true);
@@ -24,42 +32,44 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    if (!name || !email || !password || !confirmPassword) {
       toast.error('Please fill in all fields');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    if (!acceptTerms) {
+      toast.error('Please accept the terms and conditions');
       return;
     }
     
     setIsSubmitting(true);
     
     try {
-      const success = await login(email, password);
+      const success = await signup(name, email, password);
       if (success) {
         navigate('/dashboard');
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Signup error:', error);
       toast.error('An unexpected error occurred');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const loginAsAdmin = () => {
-    setEmail('admin@example.com');
-    setPassword('password123');
-  };
-
-  const loginAsMember = () => {
-    setEmail('member@example.com');
-    setPassword('password123');
-  };
-
+  // If user is already authenticated, redirect to dashboard
   if (isAuthenticated && !isLoading) {
     return <Navigate to="/dashboard" />;
   }
 
   return (
     <div className="min-h-screen flex flex-col justify-center bg-gradient-to-b from-background to-accent/30 relative overflow-hidden">
+      {/* Decorative shapes */}
       <div 
         className={`absolute top-[-5%] right-[-5%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-3xl transform transition-all duration-1000 ease-out ${
           animateShapes ? 'translate-x-0 opacity-70' : 'translate-x-full opacity-0'
@@ -76,25 +86,47 @@ const Login = () => {
           <div className="text-center mb-6">
             <div className="flex justify-center">
               <div className="h-14 w-14 rounded-xl bg-primary flex items-center justify-center shadow-lg mb-4 transform transition-transform hover:scale-105">
-                <LockKeyhole className="h-8 w-8 text-white" />
+                <UserPlus className="h-8 w-8 text-white" />
               </div>
             </div>
-            <h2 className="mt-4 text-3xl font-bold text-foreground">Welcome to ProjectFlow</h2>
-            <p className="mt-2 text-muted-foreground">Sign in to your account</p>
+            <h2 className="mt-4 text-3xl font-bold text-foreground">Create your account</h2>
+            <p className="mt-2 text-muted-foreground">Join ProjectFlow and start managing your projects</p>
           </div>
           
           <div className="mt-8 bg-card sm:rounded-xl shadow-card border border-border overflow-hidden">
             <div className="px-6 py-8">
               <form className="space-y-6" onSubmit={handleSubmit}>
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
+                  <Label htmlFor="name" className="block text-sm font-medium text-foreground mb-1">
+                    Full Name
+                  </Label>
+                  <div className="relative rounded-md">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <Input
+                      id="name"
+                      name="name"
+                      type="text"
+                      autoComplete="name"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="pl-10 pr-3"
+                      placeholder="John Doe"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
                     Email address
-                  </label>
+                  </Label>
                   <div className="relative rounded-md">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Mail className="h-5 w-5 text-muted-foreground" />
                     </div>
-                    <input
+                    <Input
                       id="email"
                       name="email"
                       type="email"
@@ -102,36 +134,29 @@ const Login = () => {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2.5 border border-input rounded-md focus:ring-2 focus:ring-primary/30 focus:border-primary bg-card text-foreground placeholder-muted-foreground shadow-sm transition-all"
+                      className="pl-10 pr-3"
                       placeholder="you@example.com"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
-                      Password
-                    </label>
-                    <div className="text-sm">
-                      <a href="#" className="font-medium text-primary hover:text-primary/80 transition-colors">
-                        Forgot your password?
-                      </a>
-                    </div>
-                  </div>
+                  <Label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
+                    Password
+                  </Label>
                   <div className="relative rounded-md">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <LockKeyhole className="h-5 w-5 text-muted-foreground" />
                     </div>
-                    <input
+                    <Input
                       id="password"
                       name="password"
                       type={showPassword ? "text" : "password"}
-                      autoComplete="current-password"
+                      autoComplete="new-password"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="block w-full pl-10 pr-10 py-2.5 border border-input rounded-md focus:ring-2 focus:ring-primary/30 focus:border-primary bg-card text-foreground placeholder-muted-foreground shadow-sm transition-all"
+                      className="pl-10 pr-10"
                       placeholder="••••••••"
                     />
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -150,75 +175,72 @@ const Login = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <input
-                      id="remember-me"
-                      name="remember-me"
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="h-4 w-4 text-primary border-input rounded focus:ring-primary bg-card transition-colors"
+                <div>
+                  <Label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-1">
+                    Confirm Password
+                  </Label>
+                  <div className="relative rounded-md">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <LockKeyhole className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      required
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="pl-10 pr-10"
+                      placeholder="••••••••"
                     />
-                    <label htmlFor="remember-me" className="ml-2 block text-sm text-foreground">
-                      Remember me
-                    </label>
                   </div>
                 </div>
 
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="terms" 
+                    checked={acceptTerms}
+                    onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
+                  />
+                  <label
+                    htmlFor="terms"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    I accept the{" "}
+                    <a href="#" className="text-primary hover:underline">
+                      terms and conditions
+                    </a>
+                  </label>
+                </div>
+
                 <div>
-                  <button
+                  <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all disabled:opacity-70 disabled:hover:bg-primary relative overflow-hidden transform active:scale-[0.98]"
+                    className="w-full relative overflow-hidden"
                   >
                     {isSubmitting ? (
-                      <div className="flex items-center">
+                      <div className="flex items-center justify-center">
                         <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <span>Signing in...</span>
+                        <span>Creating account...</span>
                       </div>
                     ) : (
-                      <span>Sign in</span>
+                      <span>Create Account</span>
                     )}
-                  </button>
+                  </Button>
                 </div>
               </form>
-              
-              <div className="mt-8">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-border"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-card text-muted-foreground">Or continue with demo accounts</span>
-                  </div>
-                </div>
-
-                <div className="mt-6 grid grid-cols-2 gap-3">
-                  <button
-                    onClick={loginAsAdmin}
-                    className="w-full flex justify-center py-2 px-4 border border-input rounded-md shadow-sm text-sm font-medium text-foreground bg-accent hover:bg-accent/70 focus:outline-none transition-colors"
-                  >
-                    Admin Demo
-                  </button>
-                  <button
-                    onClick={loginAsMember}
-                    className="w-full flex justify-center py-2 px-4 border border-input rounded-md shadow-sm text-sm font-medium text-foreground bg-accent hover:bg-accent/70 focus:outline-none transition-colors"
-                  >
-                    Member Demo
-                  </button>
-                </div>
-              </div>
             </div>
             
             <div className="px-6 py-4 bg-muted/40 border-t border-border">
               <p className="text-center text-sm text-muted-foreground">
-                Don't have an account?{' '}
-                <Link to="/signup" className="font-medium text-primary hover:text-primary/80 transition-colors">
-                  Create a free account
+                Already have an account?{' '}
+                <Link to="/login" className="font-medium text-primary hover:text-primary/80 transition-colors">
+                  Sign in
                 </Link>
               </p>
             </div>
@@ -229,4 +251,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Signup;
