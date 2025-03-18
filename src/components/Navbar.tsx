@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -16,7 +17,9 @@ import {
   Clock, 
   User, 
   Users, 
-  X 
+  X,
+  BellOff,
+  CircleSlash
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import HelpPopover from './HelpPopover';
@@ -29,28 +32,41 @@ interface NavItemProps {
   icon: React.ReactNode;
   label: string;
   active: boolean;
+  disabled?: boolean;
 }
 
-const NavItem: React.FC<NavItemProps> = ({ to, icon, label, active }) => {
+const NavItem: React.FC<NavItemProps> = ({ to, icon, label, active, disabled }) => {
+  const handleClick = (e: React.MouseEvent) => {
+    if (disabled) {
+      e.preventDefault();
+      toast.info(`${label} feature is currently disabled`);
+    }
+  };
+
   return (
     <Link
-      to={to}
+      to={disabled ? '#' : to}
+      onClick={handleClick}
       className={cn(
         'flex items-center px-4 py-3 rounded-lg font-medium transition-all',
         'group relative overflow-hidden',
-        active
+        disabled && 'opacity-50 cursor-not-allowed',
+        active && !disabled
           ? 'text-primary bg-primary/10'
           : 'text-foreground/70 hover:text-foreground hover:bg-accent/50'
       )}
     >
       <div className={cn(
         'mr-3 transition-all duration-300',
-        active ? 'text-primary' : 'text-foreground/60 group-hover:text-foreground/80'
+        active && !disabled ? 'text-primary' : 'text-foreground/60 group-hover:text-foreground/80'
       )}>
         {icon}
       </div>
       <span>{label}</span>
-      {active && (
+      {disabled && (
+        <CircleSlash className="h-4 w-4 ml-2 text-muted-foreground" />
+      )}
+      {active && !disabled && (
         <span className="absolute inset-0 bg-primary/5 animate-pulse-subtle pointer-events-none" />
       )}
     </Link>
@@ -66,11 +82,11 @@ const Navbar: React.FC = () => {
   const profileRef = useRef<HTMLDivElement>(null);
 
   const navItems = [
-    { path: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
-    { path: '/timeline', icon: <Clock size={20} />, label: 'Timeline' },
-    { path: '/calendar', icon: <Calendar size={20} />, label: 'Calendar' },
-    { path: '/team', icon: <Users size={20} />, label: 'Team' },
-    { path: '/reports', icon: <ClipboardList size={20} />, label: 'Reports' },
+    { path: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard', disabled: false },
+    { path: '/timeline', icon: <Clock size={20} />, label: 'Timeline', disabled: false },
+    { path: '/calendar', icon: <Calendar size={20} />, label: 'Calendar', disabled: true },
+    { path: '/team', icon: <Users size={20} />, label: 'Team', disabled: false },
+    { path: '/reports', icon: <ClipboardList size={20} />, label: 'Reports', disabled: true },
   ];
 
   // Close profile dropdown when clicking outside
@@ -103,6 +119,14 @@ const Navbar: React.FC = () => {
     setIsProfileMenuOpen(false);
   };
 
+  const handleSearchClick = () => {
+    toast.info("Search functionality is currently disabled");
+  };
+
+  const handleNotificationsClick = () => {
+    toast.info("Notifications are currently disabled");
+  };
+
   return (
     <nav className="bg-background border-b border-border sticky top-0 z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -125,6 +149,7 @@ const Navbar: React.FC = () => {
                   icon={item.icon}
                   label={item.label}
                   active={location.pathname === item.path}
+                  disabled={item.disabled}
                 />
               ))}
             </div>
@@ -132,20 +157,24 @@ const Navbar: React.FC = () => {
 
           {/* Right side menu */}
           <div className="flex items-center">
-            {/* Search */}
+            {/* Search - Disabled */}
             <button
-              onClick={() => setIsSearchOpen(true)}
-              className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors mr-3"
+              onClick={handleSearchClick}
+              className="p-2 rounded-md text-muted-foreground opacity-50 cursor-not-allowed"
             >
               <Search size={20} />
             </button>
-            <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
             {/* Help */}
             <HelpPopover />
 
-            {/* Notifications */}
-            <NotificationsPopover />
+            {/* Notifications - Disabled */}
+            <button
+              onClick={handleNotificationsClick}
+              className="p-2 rounded-md text-muted-foreground opacity-50 cursor-not-allowed ml-2"
+            >
+              <BellOff size={20} />
+            </button>
 
             {/* Profile dropdown */}
             <div className="relative" ref={profileRef}>
@@ -227,16 +256,27 @@ const Navbar: React.FC = () => {
             {navItems.map((item) => (
               <Link
                 key={item.path}
-                to={item.path}
-                className={`${
-                  location.pathname === item.path
+                to={item.disabled ? '#' : item.path}
+                onClick={(e) => {
+                  if (item.disabled) {
+                    e.preventDefault();
+                    toast.info(`${item.label} feature is currently disabled`);
+                  }
+                  setIsMobileMenuOpen(false);
+                }}
+                className={cn(
+                  `block px-3 py-2 rounded-md text-base font-medium flex items-center`,
+                  item.disabled && 'opacity-50 cursor-not-allowed',
+                  location.pathname === item.path && !item.disabled
                     ? 'bg-primary/10 text-primary'
                     : 'text-foreground hover:bg-accent'
-                } block px-3 py-2 rounded-md text-base font-medium flex items-center`}
-                onClick={() => setIsMobileMenuOpen(false)}
+                )}
               >
                 <span className="mr-3">{item.icon}</span>
                 {item.label}
+                {item.disabled && (
+                  <CircleSlash className="h-4 w-4 ml-2 text-muted-foreground" />
+                )}
               </Link>
             ))}
           </div>

@@ -9,13 +9,13 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Timeline from "./pages/Timeline";
-import Calendar from "./pages/Calendar";
 import Team from "./pages/Team";
-import Reports from "./pages/Reports";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import ProjectDetail from "./pages/ProjectDetail";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,6 +25,15 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Component to show toast and redirect
+const DisabledRoute = ({ feature }: { feature: string }) => {
+  useEffect(() => {
+    toast.info(`${feature} feature is currently disabled`);
+  }, [feature]);
+  
+  return <Navigate to="/dashboard" />;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -38,9 +47,9 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/timeline" element={<Timeline />} />
-            <Route path="/calendar" element={<Calendar />} />
+            <Route path="/calendar" element={<DisabledRoute feature="Calendar" />} />
             <Route path="/team" element={<Team />} />
-            <Route path="/reports" element={<Reports />} />
+            <Route path="/reports" element={<DisabledRoute feature="Reports" />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/project/:id" element={<ProjectDetail />} />

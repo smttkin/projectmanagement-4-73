@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Filter, Plus, ClipboardList } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Filter, Plus, ClipboardList, XCircle } from 'lucide-react';
 import { format, addDays, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, subMonths, startOfQuarter, endOfQuarter } from 'date-fns';
 import Navbar from '@/components/Navbar';
 import TimelineDisplay, { TimelineItem } from '@/components/TimelineDisplay';
@@ -31,6 +31,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 // Sample data for timeline items
 const sampleTimelineItems: TimelineItem[] = [
@@ -113,7 +114,27 @@ const teamMembers = [
 ];
 
 const Timeline = () => {
-  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>(sampleTimelineItems);
+  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>(
+    // Try to load from localStorage first, otherwise use sample data
+    (() => {
+      try {
+        const saved = localStorage.getItem('timeline-items');
+        if (saved) {
+          return JSON.parse(saved, (key, value) => {
+            if (key === 'startDate' || key === 'endDate') {
+              return new Date(value);
+            }
+            return value;
+          });
+        }
+        return sampleTimelineItems;
+      } catch (e) {
+        console.error("Error loading timeline items:", e);
+        return sampleTimelineItems;
+      }
+    })()
+  );
+  
   const [viewMode, setViewMode] = useState<'week' | 'month' | 'quarter'>('month');
   const [dateRange, setDateRange] = useState({
     startDate: startOfMonth(new Date()),
@@ -129,6 +150,11 @@ const Timeline = () => {
     status: 'not-started',
     assigneeId: ''
   });
+  
+  // Save to localStorage whenever timelineItems changes
+  React.useEffect(() => {
+    localStorage.setItem('timeline-items', JSON.stringify(timelineItems));
+  }, [timelineItems]);
   
   // Handle changing the date range based on view mode
   const handlePrevPeriod = () => {
@@ -230,6 +256,12 @@ const Timeline = () => {
     
     setIsAddEventOpen(false);
     toast.success("Event added to timeline");
+  };
+  
+  // Delete an event
+  const handleDeleteEvent = (id: string) => {
+    setTimelineItems(timelineItems.filter(item => item.id !== id));
+    toast.success("Event removed from timeline");
   };
   
   // Filter timeline items based on selected status
@@ -369,6 +401,57 @@ const Timeline = () => {
               viewMode={viewMode}
             />
           </div>
+          
+          {/* Selected date events */}
+          {selectedDate && (
+            <div className="bg-card border rounded-lg p-4 mt-2">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Events on {format(selectedDate, 'MMM d, yyyy')}</h3>
+              </div>
+              
+              <div className="space-y-3">
+                {filteredItems.filter(item => 
+                  selectedDate >= item.startDate && selectedDate <= item.endDate
+                ).length > 0 ? (
+                  filteredItems.filter(item => 
+                    selectedDate >= item.startDate && selectedDate <= item.endDate
+                  ).map(item => (
+                    <div key={item.id} className="flex justify-between items-center p-3 border rounded-lg">
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <Badge className={cn(
+                            item.status === 'completed' ? "bg-green-100 text-green-800 border-green-300" :
+                            item.status === 'in-progress' ? "bg-blue-100 text-blue-800 border-blue-300" :
+                            item.status === 'at-risk' ? "bg-red-100 text-red-800 border-red-300" :
+                            "bg-orange-100 text-orange-800 border-orange-300"
+                          )}>
+                            {item.status.replace('-', ' ')}
+                          </Badge>
+                          <span className="font-medium">{item.title}</span>
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          {format(item.startDate, 'MMM d')} - {format(item.endDate, 'MMM d, yyyy')}
+                        </div>
+                      </div>
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleDeleteEvent(item.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground">
+                    No events scheduled for this day
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </main>
       
