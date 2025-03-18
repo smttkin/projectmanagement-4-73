@@ -10,12 +10,14 @@ interface TimeTrackerProps {
   projectId: string;
   onTimeEntryAdded?: () => void;
   onTimeEntriesUpdated?: (timeEntriesCount: number) => void;
+  onTimeTracked?: () => void; // Added this prop to fix the TypeScript error
 }
 
 const TimeTracker: React.FC<TimeTrackerProps> = ({
   projectId,
   onTimeEntryAdded,
-  onTimeEntriesUpdated
+  onTimeEntriesUpdated,
+  onTimeTracked
 }) => {
   const {
     timeEntries,
@@ -36,6 +38,9 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
     toast.success("Time entry saved");
     if (onTimeEntryAdded) {
       onTimeEntryAdded();
+    }
+    if (onTimeTracked) {
+      onTimeTracked();
     }
   };
 
