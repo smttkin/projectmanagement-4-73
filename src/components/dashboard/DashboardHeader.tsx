@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,10 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Project } from '@/types/project';
+import { projectsData } from '../../data/projects';
 import { ProjectCardProps } from '../ProjectCard';
-import { cardPropsToProject, projectToCardProps } from '@/utils/projectMappers';
-import { projectService } from '@/services';
 
 interface DashboardHeaderProps {
   user: UserData | null;
@@ -36,7 +35,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user, onProjectAdded 
     setIsDialogOpen(true);
   };
 
-  const handleCreateProject = async () => {
+  const handleCreateProject = () => {
     if (!projectName.trim()) {
       return;
     }
@@ -44,8 +43,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user, onProjectAdded 
     // Generate a unique ID
     const newProjectId = Date.now().toString();
     
-    // Create new project card props
-    const newProjectCard: ProjectCardProps = {
+    // Create new project
+    const newProject: ProjectCardProps = {
       id: newProjectId,
       title: projectName,
       description: projectDescription || "No description provided",
@@ -56,34 +55,24 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user, onProjectAdded 
       members: [
         { id: user?.id || '1', name: user?.name || 'Admin User', avatar: user?.avatar || 'https://i.pravatar.cc/150?img=68' },
       ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     };
     
-    // Convert to Project type for the service
-    const newProject = cardPropsToProject(newProjectCard);
+    // Add to projects data in the local state of this component
+    projectsData.unshift(newProject);
     
-    try {
-      // Save the project using the service
-      await projectService.createProject(newProject);
-      
-      // Notify parent component
-      if (onProjectAdded) {
-        onProjectAdded(newProjectCard);
-      }
-  
-      // Close the dialog and reset form
-      setIsDialogOpen(false);
-      setProjectName("");
-      setProjectDescription("");
-      setProjectPriority("medium");
-      
-      // Navigate to the new project
-      navigate(`/project/${newProjectId}`);
-    } catch (error) {
-      console.error('Error creating project:', error);
+    // Notify parent component
+    if (onProjectAdded) {
+      onProjectAdded(newProject);
     }
+
+    // Close the dialog and reset form
+    setIsDialogOpen(false);
+    setProjectName("");
+    setProjectDescription("");
+    setProjectPriority("medium");
+    
+    // Navigate to the new project
+    navigate(`/project/${newProjectId}`);
   };
 
   return (

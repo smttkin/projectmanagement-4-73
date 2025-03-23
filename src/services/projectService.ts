@@ -1,4 +1,3 @@
-
 import { ApiService } from './api';
 import { Project } from '@/types/project';
 import { toast } from 'sonner';
@@ -35,21 +34,10 @@ class ProjectService extends ApiService {
   // Get all projects
   async getProjects(): Promise<Project[]> {
     try {
-      // Using a more reliable mock data approach
       const projects = this.getStoredProjects();
-      
-      // If projects array is empty, use fallback mock data
-      if (!projects || projects.length === 0) {
-        // Save the mock projects to storage
-        this.saveProjects(projectsData);
-        return await this.simulateResponse(projectsData, 0); // Set error chance to 0 to avoid random errors
-      }
-      
-      return await this.simulateResponse(projects, 0);
+      return this.simulateResponse(projects);
     } catch (error) {
-      console.error("Error in getProjects:", error);
-      // Return empty array instead of throwing to avoid crashes
-      return [];
+      return this.handleError(error, 'Failed to fetch projects');
     }
   }
   
@@ -63,7 +51,7 @@ class ProjectService extends ApiService {
         throw new Error(`Project with ID ${id} not found`);
       }
       
-      return this.simulateResponse(project, 0); // Set error chance to 0
+      return this.simulateResponse(project);
     } catch (error) {
       return this.handleError(error, `Failed to fetch project ${id}`);
     }
@@ -85,7 +73,7 @@ class ProjectService extends ApiService {
       this.saveProjects([...projects, newProject]);
       
       toast.success('Project created successfully');
-      return this.simulateResponse(newProject, 0);
+      return this.simulateResponse(newProject, 0.1);
     } catch (error) {
       return this.handleError(error, 'Failed to create project');
     }
@@ -112,7 +100,7 @@ class ProjectService extends ApiService {
       this.saveProjects(projects);
       
       toast.success('Project updated successfully');
-      return this.simulateResponse(updatedProject, 0);
+      return this.simulateResponse(updatedProject);
     } catch (error) {
       return this.handleError(error, `Failed to update project ${id}`);
     }
@@ -130,7 +118,7 @@ class ProjectService extends ApiService {
       
       this.saveProjects(updatedProjects);
       
-      await this.simulateResponse(undefined, 0);
+      await this.simulateResponse(undefined);
       toast.success('Project deleted successfully');
     } catch (error) {
       this.handleError(error, `Failed to delete project ${id}`);

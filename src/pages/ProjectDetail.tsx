@@ -53,8 +53,9 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from 'date-fns';
 import KanbanBoard from '@/components/kanban/KanbanBoard';
-import { projectService } from '@/services';
-import { projectToCardProps } from '@/utils/projectMappers';
+
+// Importing mock data to find the project
+import { projectsData } from '@/data/projects';
 
 interface Member {
   id: string;
@@ -93,34 +94,23 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ edit = false }) => {
   });
 
   useEffect(() => {
-    const fetchProject = async () => {
-      if (!id) return;
-      
-      try {
-        const projectData = await projectService.getProject(id);
-        
-        if (projectData) {
-          const projectCardProps = projectToCardProps(projectData);
-          setProject(projectCardProps);
-          setFormData({
-            title: projectCardProps.title,
-            description: projectCardProps.description,
-            status: projectCardProps.status,
-            priority: projectCardProps.priority,
-            dueDate: projectCardProps.dueDate,
-          });
-          setTeamMembers(projectCardProps.members);
-        } else {
-          toast.error("Project not found");
-          navigate('/dashboard');
-        }
-      } catch (error) {
-        toast.error("Error loading project");
-        navigate('/dashboard');
-      }
-    };
+    // In a real app, this would be an API call
+    const foundProject = projectsData.find(p => p.id === id);
     
-    fetchProject();
+    if (foundProject) {
+      setProject(foundProject);
+      setFormData({
+        title: foundProject.title,
+        description: foundProject.description,
+        status: foundProject.status,
+        priority: foundProject.priority,
+        dueDate: foundProject.dueDate,
+      });
+      setTeamMembers(foundProject.members);
+    } else {
+      toast.error("Project not found");
+      navigate('/dashboard');
+    }
   }, [id, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

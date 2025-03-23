@@ -32,10 +32,6 @@ export interface ProjectCardProps {
     name: string;
     avatar?: string;
   }>;
-  createdAt?: string;
-  updatedAt?: string;
-  deadline?: string;
-  className?: string;
   onClick?: () => void;
   onDelete?: (e: React.MouseEvent) => void;
 }
@@ -63,8 +59,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   status,
   members,
   onClick,
-  onDelete,
-  className
+  onDelete
 }) => {
   const navigate = useNavigate();
   const StatusIcon = statusConfig[status].icon;
@@ -85,10 +80,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   
   return (
     <div 
-      className={cn(
-        "bg-card border border-border rounded-xl shadow-subtle hover:shadow-card transition-all duration-300 overflow-hidden interactive cursor-pointer",
-        className
-      )}
+      className="bg-card border border-border rounded-xl shadow-subtle hover:shadow-card transition-all duration-300 overflow-hidden interactive cursor-pointer"
       onClick={handleCardClick}
     >
       <div className="p-5">

@@ -25,11 +25,11 @@ export class ApiService {
   }
 
   // Simulate successful API response
-  protected async simulateResponse<T>(data: T, errorChance: number = 0): Promise<T> {
+  protected async simulateResponse<T>(data: T, errorChance: number = 0.05): Promise<T> {
     await this.delay();
     
-    // Randomly simulate errors (only in development and if errorChance > 0)
-    if (import.meta.env.DEV && errorChance > 0 && Math.random() < errorChance) {
+    // Randomly simulate errors (only in development)
+    if (import.meta.env.DEV && Math.random() < errorChance) {
       throw new Error(`Random ${this.resourceName} service error`);
     }
     

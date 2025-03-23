@@ -1,25 +1,21 @@
 
-import { Project } from '@/types/project';
+import { ProjectCardProps } from '@/components/ProjectCard';
 
-// Mock data for projects with proper Project type
-export const projectsData: Project[] = [
+// Mock data for projects
+export const projectsData: ProjectCardProps[] = [
   {
     id: '1',
     title: 'Website Redesign',
     description: 'Complete overhaul of company website with new branding and improved UX.',
     progress: 65,
     dueDate: 'Sep 30',
-    startDate: '2023-07-15',
     priority: 'high',
-    status: 'active',
-    teamMembers: [
-      { id: '1', name: 'Admin User', email: 'admin@example.com', role: 'leader', avatar: 'https://i.pravatar.cc/150?img=68' },
-      { id: '2', name: 'Team Member', email: 'team.member@example.com', role: 'developer', avatar: 'https://i.pravatar.cc/150?img=32' },
-      { id: '3', name: 'Jane Doe', email: 'jane.doe@example.com', role: 'designer', avatar: 'https://i.pravatar.cc/150?img=47' },
+    status: 'in-progress',
+    members: [
+      { id: '1', name: 'Admin User', avatar: 'https://i.pravatar.cc/150?img=68' },
+      { id: '2', name: 'Team Member', avatar: 'https://i.pravatar.cc/150?img=32' },
+      { id: '3', name: 'Jane Doe', avatar: 'https://i.pravatar.cc/150?img=47' },
     ],
-    tags: ['design', 'frontend'],
-    createdAt: '2023-07-10T00:00:00.000Z',
-    updatedAt: '2023-08-05T00:00:00.000Z',
   },
   {
     id: '2',
@@ -27,16 +23,12 @@ export const projectsData: Project[] = [
     description: 'Create a cross-platform mobile application for iOS and Android.',
     progress: 30,
     dueDate: 'Oct 15',
-    startDate: '2023-08-01',
     priority: 'medium',
-    status: 'active',
-    teamMembers: [
-      { id: '2', name: 'Team Member', email: 'team.member@example.com', role: 'developer', avatar: 'https://i.pravatar.cc/150?img=32' },
-      { id: '4', name: 'John Smith', email: 'john.smith@example.com', role: 'developer', avatar: 'https://i.pravatar.cc/150?img=12' },
+    status: 'in-progress',
+    members: [
+      { id: '2', name: 'Team Member', avatar: 'https://i.pravatar.cc/150?img=32' },
+      { id: '4', name: 'John Smith', avatar: 'https://i.pravatar.cc/150?img=12' },
     ],
-    tags: ['mobile', 'react-native'],
-    createdAt: '2023-07-25T00:00:00.000Z',
-    updatedAt: '2023-08-10T00:00:00.000Z',
   },
   {
     id: '3',
@@ -44,18 +36,14 @@ export const projectsData: Project[] = [
     description: 'Launch Q4 marketing campaign across social media channels.',
     progress: 100,
     dueDate: 'Aug 28',
-    startDate: '2023-08-01',
     priority: 'medium',
     status: 'completed',
-    teamMembers: [
-      { id: '1', name: 'Admin User', email: 'admin@example.com', role: 'leader', avatar: 'https://i.pravatar.cc/150?img=68' },
-      { id: '3', name: 'Jane Doe', email: 'jane.doe@example.com', role: 'designer', avatar: 'https://i.pravatar.cc/150?img=47' },
-      { id: '5', name: 'Robert Johnson', email: 'robert.johnson@example.com', role: 'marketing', avatar: 'https://i.pravatar.cc/150?img=59' },
-      { id: '6', name: 'Emily Clark', email: 'emily.clark@example.com', role: 'marketing', avatar: 'https://i.pravatar.cc/150?img=24' },
+    members: [
+      { id: '1', name: 'Admin User', avatar: 'https://i.pravatar.cc/150?img=68' },
+      { id: '3', name: 'Jane Doe', avatar: 'https://i.pravatar.cc/150?img=47' },
+      { id: '5', name: 'Robert Johnson', avatar: 'https://i.pravatar.cc/150?img=59' },
+      { id: '6', name: 'Emily Clark', avatar: 'https://i.pravatar.cc/150?img=24' },
     ],
-    tags: ['marketing', 'social-media'],
-    createdAt: '2023-07-15T00:00:00.000Z',
-    updatedAt: '2023-08-28T00:00:00.000Z',
   },
   {
     id: '4',
@@ -63,17 +51,13 @@ export const projectsData: Project[] = [
     description: 'Coordinate and execute launch of new product line.',
     progress: 10,
     dueDate: 'Nov 5',
-    startDate: '2023-09-15',
     priority: 'high',
-    status: 'cancelled',
-    teamMembers: [
-      { id: '1', name: 'Admin User', email: 'admin@example.com', role: 'leader', avatar: 'https://i.pravatar.cc/150?img=68' },
-      { id: '2', name: 'Team Member', email: 'team.member@example.com', role: 'developer', avatar: 'https://i.pravatar.cc/150?img=32' },
-      { id: '4', name: 'John Smith', email: 'john.smith@example.com', role: 'product', avatar: 'https://i.pravatar.cc/150?img=12' },
+    status: 'not-started',
+    members: [
+      { id: '1', name: 'Admin User', avatar: 'https://i.pravatar.cc/150?img=68' },
+      { id: '2', name: 'Team Member', avatar: 'https://i.pravatar.cc/150?img=32' },
+      { id: '4', name: 'John Smith', avatar: 'https://i.pravatar.cc/150?img=12' },
     ],
-    tags: ['product', 'launch'],
-    createdAt: '2023-08-01T00:00:00.000Z',
-    updatedAt: '2023-09-01T00:00:00.000Z',
   },
   {
     id: '5',
@@ -81,15 +65,11 @@ export const projectsData: Project[] = [
     description: 'Design and distribute customer satisfaction survey.',
     progress: 90,
     dueDate: 'Sep 10',
-    startDate: '2023-08-15',
     priority: 'low',
-    status: 'active',
-    teamMembers: [
-      { id: '3', name: 'Jane Doe', email: 'jane.doe@example.com', role: 'designer', avatar: 'https://i.pravatar.cc/150?img=47' },
+    status: 'in-progress',
+    members: [
+      { id: '3', name: 'Jane Doe', avatar: 'https://i.pravatar.cc/150?img=47' },
     ],
-    tags: ['research', 'customer'],
-    createdAt: '2023-08-10T00:00:00.000Z',
-    updatedAt: '2023-09-01T00:00:00.000Z',
   },
   {
     id: '6',
@@ -97,16 +77,12 @@ export const projectsData: Project[] = [
     description: 'Integrate new CRM system with existing infrastructure.',
     progress: 45,
     dueDate: 'Oct 25',
-    startDate: '2023-09-01',
     priority: 'high',
-    status: 'on-hold',
-    teamMembers: [
-      { id: '2', name: 'Team Member', email: 'team.member@example.com', role: 'developer', avatar: 'https://i.pravatar.cc/150?img=32' },
-      { id: '5', name: 'Robert Johnson', email: 'robert.johnson@example.com', role: 'developer', avatar: 'https://i.pravatar.cc/150?img=59' },
-      { id: '7', name: 'Mark Wilson', email: 'mark.wilson@example.com', role: 'devops', avatar: 'https://i.pravatar.cc/150?img=5' },
+    status: 'at-risk',
+    members: [
+      { id: '2', name: 'Team Member', avatar: 'https://i.pravatar.cc/150?img=32' },
+      { id: '5', name: 'Robert Johnson', avatar: 'https://i.pravatar.cc/150?img=59' },
+      { id: '7', name: 'Mark Wilson', avatar: 'https://i.pravatar.cc/150?img=5' },
     ],
-    tags: ['integration', 'crm', 'backend'],
-    createdAt: '2023-08-25T00:00:00.000Z',
-    updatedAt: '2023-09-10T00:00:00.000Z',
   },
 ];

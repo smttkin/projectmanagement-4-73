@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Filter, LayoutGrid, List } from 'lucide-react';
@@ -17,11 +18,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import ProjectCard, { ProjectCardProps } from '@/components/ProjectCard';
+import ProjectCard from '@/components/ProjectCard';
 import { projectService } from '@/services';
 import { toast } from 'sonner';
-import { Project } from '@/types/project';
-import { projectToCardProps } from '@/utils/projectMappers';
+import { ProjectCardProps } from '@/components/ProjectCard';
 
 const ProjectsPage = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -37,15 +37,7 @@ const ProjectsPage = () => {
       try {
         setIsLoading(true);
         const data = await projectService.getProjects();
-        
-        if (data && data.length > 0) {
-          const mappedProjects = data.map(projectToCardProps);
-          setProjects(mappedProjects);
-        } else {
-          // If no projects were returned, show a message
-          setProjects([]);
-          toast.info("No projects available");
-        }
+        setProjects(data);
       } catch (error) {
         console.error('Error fetching projects:', error);
         toast.error('Failed to load projects');
@@ -61,19 +53,15 @@ const ProjectsPage = () => {
     navigate('/project/new');
   };
 
-  const handleDeleteProject = async (id: string, e: React.MouseEvent) => {
+  const handleDeleteProject = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     
-    try {
-      // Call the API to delete the project
-      await projectService.deleteProject(id);
-      
-      // Filter out the deleted project
-      setProjects(projects.filter(project => project.id !== id));
-    } catch (error) {
-      // Error will be handled by the service with a toast
-      console.error('Error deleting project:', error);
-    }
+    // Filter out the deleted project
+    setProjects(projects.filter(project => project.id !== id));
+    toast.success("Project deleted successfully");
+    
+    // In a real app, you would also call the API to delete the project
+    // projectService.deleteProject(id);
   };
 
   // Filter and sort projects
@@ -92,9 +80,9 @@ const ProjectsPage = () => {
       // Apply sorting
       switch (sortBy) {
         case 'newest':
-          return new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime();
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         case 'oldest':
-          return new Date(a.createdAt || '').getTime() - new Date(b.createdAt || '').getTime();
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         case 'name-asc':
           return a.title.localeCompare(b.title);
         case 'name-desc':
