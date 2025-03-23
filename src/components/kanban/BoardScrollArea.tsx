@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 import KanbanColumn from './KanbanColumn';
 import { AddColumnButton } from './AddColumnButton';
@@ -31,8 +31,6 @@ export const BoardScrollArea: React.FC<BoardScrollAreaProps> = ({
   columns,
   boardRef,
   columnWidth,
-  currentScrollIndex,
-  columnsPerView,
   tasksByStatus,
   onAddTask,
   onTaskClick,
@@ -55,13 +53,10 @@ export const BoardScrollArea: React.FC<BoardScrollAreaProps> = ({
       style={{ minWidth: '100%', scrollSnapType: 'x mandatory' }}
       onWheel={handleWheelScroll}
     >
-      {columns.map((column, index) => (
+      {columns.map((column) => (
         <div 
           key={column.id} 
-          className={cn(
-            "transition-all duration-200 scroll-snap-align-start",
-            index >= columnsPerView ? "opacity-50" : ""
-          )}
+          className="transition-all duration-200 scroll-snap-align-start"
           style={{ 
             width: `${columnWidth}px`,
             minWidth: `${columnWidth}px`,
@@ -80,10 +75,6 @@ export const BoardScrollArea: React.FC<BoardScrollAreaProps> = ({
             onEditTask={onTaskClick}
             onDeleteTask={onDeleteTask}
           />
-          
-          {index === columnsPerView && (
-            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm pointer-events-none" />
-          )}
         </div>
       ))}
       

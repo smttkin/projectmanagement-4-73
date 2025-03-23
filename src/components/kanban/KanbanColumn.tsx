@@ -137,7 +137,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
         )}
       </div>
       
-      <div className="flex-1 p-2 overflow-y-auto max-h-[calc(100vh-280px)]">
+      <div className="flex-1 p-2 overflow-y-auto max-h-[calc(100vh-200px)] flex-grow">
         {tasks.map(task => (
           <KanbanTask 
             key={task.id} 

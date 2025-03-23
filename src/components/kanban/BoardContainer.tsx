@@ -103,7 +103,7 @@ export const BoardContainer: React.FC<BoardContainerProps> = ({
   
   return (
     <div className="relative flex-1 mt-4">
-      <div className="h-[calc(100vh-250px)] overflow-hidden" ref={scrollContainerRef}>
+      <div className="h-[calc(100vh-170px)] overflow-hidden flex flex-col" ref={scrollContainerRef}>
         <BoardScrollControls 
           currentScrollIndex={currentScrollIndex}
           columnsLength={columns.length}
@@ -112,27 +112,29 @@ export const BoardContainer: React.FC<BoardContainerProps> = ({
           onScrollRight={scrollRight}
         />
         
-        <BoardScrollArea 
-          columns={columns}
-          boardRef={boardRef}
-          columnWidth={columnWidth}
-          currentScrollIndex={currentScrollIndex}
-          columnsPerView={columnsPerView}
-          tasksByStatus={tasksByStatus}
-          onAddTask={onAddTask}
-          onTaskClick={onTaskClick}
-          onDrop={onDrop}
-          onUpdateColumn={onUpdateColumn}
-          onDeleteColumn={onDeleteColumn}
-          isCreateColumnOpen={isCreateColumnOpen}
-          setIsCreateColumnOpen={setIsCreateColumnOpen}
-          newColumn={newColumn}
-          setNewColumn={setNewColumn}
-          closeCreateColumnModal={closeCreateColumnModal}
-          handleCreateColumn={handleCreateColumn}
-          onDeleteTask={onDeleteTask}
-          handleWheelScroll={handleWheelScroll}
-        />
+        <div className="flex-grow overflow-hidden flex flex-col">
+          <BoardScrollArea 
+            columns={columns}
+            boardRef={boardRef}
+            columnWidth={columnWidth}
+            currentScrollIndex={currentScrollIndex}
+            columnsPerView={columnsPerView}
+            tasksByStatus={tasksByStatus}
+            onAddTask={onAddTask}
+            onTaskClick={onTaskClick}
+            onDrop={onDrop}
+            onUpdateColumn={onUpdateColumn}
+            onDeleteColumn={onDeleteColumn}
+            isCreateColumnOpen={isCreateColumnOpen}
+            setIsCreateColumnOpen={setIsCreateColumnOpen}
+            newColumn={newColumn}
+            setNewColumn={setNewColumn}
+            closeCreateColumnModal={closeCreateColumnModal}
+            handleCreateColumn={handleCreateColumn}
+            onDeleteTask={onDeleteTask}
+            handleWheelScroll={handleWheelScroll}
+          />
+        </div>
       </div>
     </div>
   );
