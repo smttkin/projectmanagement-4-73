@@ -1,240 +1,206 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { KanbanTask, KanbanWorksheet, KanbanStatus, KanbanColumn } from '@/types/kanban';
+import { useState, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { kanbanService } from '@/services';
-import { toast } from 'sonner';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { KanbanWorksheet, Task, Column } from '@/types/kanban';
 
 export function useKanban(projectId: string) {
-  const [currentWorksheet, setCurrentWorksheet] = useState<KanbanWorksheet | null>(null);
-  const queryClient = useQueryClient();
+  const [worksheets, setWorksheets] = useState<KanbanWorksheet[]>([]);
+  const [activeWorksheet, setActiveWorksheet] = useState<string | null>(null);
 
-  // Fetch worksheets
-  const { 
-    data: worksheets = [], 
-    isLoading: isLoadingWorksheets 
-  } = useQuery({
-    queryKey: ['worksheets', projectId],
-    queryFn: () => kanbanService.getWorksheets(projectId),
-    onSuccess: (data) => {
-      // Set the first worksheet as current if none selected
-      if (data.length > 0 && !currentWorksheet) {
-        setCurrentWorksheet(data[0]);
+  // Fetch kanban data
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['kanban', projectId],
+    queryFn: () => kanbanService.getKanbanWorksheets(projectId)
+  });
+
+  // Set worksheets and active worksheet when data is loaded
+  useState(() => {
+    if (data) {
+      setWorksheets(data);
+      
+      // Set the first worksheet as active if none is selected
+      if (!activeWorksheet && data.length > 0) {
+        setActiveWorksheet(data[0].id);
       }
     }
   });
 
-  // Fetch columns for current worksheet
-  const { 
-    data: columns = [], 
-    isLoading: isLoadingColumns 
-  } = useQuery({
-    queryKey: ['columns', projectId, currentWorksheet?.id],
-    queryFn: () => currentWorksheet 
-      ? kanbanService.getColumns(projectId, currentWorksheet.id) 
-      : Promise.resolve([]),
-    enabled: !!currentWorksheet
-  });
+  // Get the currently active worksheet
+  const getActiveWorksheet = useCallback(() => {
+    if (!activeWorksheet || !worksheets.length) return null;
+    return worksheets.find(ws => ws.id === activeWorksheet) || null;
+  }, [worksheets, activeWorksheet]);
 
-  // Fetch tasks for current worksheet
-  const { 
-    data: tasks = [], 
-    isLoading: isLoadingTasks 
-  } = useQuery({
-    queryKey: ['tasks', projectId, currentWorksheet?.id],
-    queryFn: () => currentWorksheet 
-      ? kanbanService.getTasks(projectId, currentWorksheet.id) 
-      : Promise.resolve([]),
-    enabled: !!currentWorksheet
-  });
-
-  // Create worksheet mutation
-  const createWorksheetMutation = useMutation({
-    mutationFn: (data: Pick<KanbanWorksheet, 'title' | 'description'>) => 
-      kanbanService.createWorksheet(projectId, data),
-    onSuccess: (newWorksheet) => {
-      queryClient.invalidateQueries({ queryKey: ['worksheets', projectId] });
-      setCurrentWorksheet(newWorksheet);
+  // Add a new column to active worksheet
+  const addColumn = useCallback(async (columnData: Omit<Column, 'id' | 'tasks'>) => {
+    if (!activeWorksheet) return;
+    
+    try {
+      await kanbanService.addColumn(projectId, activeWorksheet, columnData);
+      refetch();
+    } catch (error) {
+      console.error('Failed to add column:', error);
     }
-  });
+  }, [projectId, activeWorksheet, refetch]);
 
-  // Create column mutation
-  const createColumnMutation = useMutation({
-    mutationFn: (data: { title: string; color: string }) => 
-      currentWorksheet 
-        ? kanbanService.createColumn(projectId, { ...data, worksheetId: currentWorksheet.id }) 
-        : Promise.reject('No worksheet selected'),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['columns', projectId, currentWorksheet?.id] });
+  // Update a column in active worksheet
+  const updateColumn = useCallback(async (columnId: string, columnData: Partial<Column>) => {
+    if (!activeWorksheet) return;
+    
+    try {
+      await kanbanService.updateColumn(projectId, activeWorksheet, columnId, columnData);
+      refetch();
+    } catch (error) {
+      console.error('Failed to update column:', error);
     }
-  });
+  }, [projectId, activeWorksheet, refetch]);
 
-  // Update column mutation
-  const updateColumnMutation = useMutation({
-    mutationFn: ({ columnId, updates }: { columnId: string, updates: Partial<KanbanColumn> }) => 
-      kanbanService.updateColumn(projectId, columnId, updates),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['columns', projectId, currentWorksheet?.id] });
+  // Delete a column from active worksheet
+  const deleteColumn = useCallback(async (columnId: string) => {
+    if (!activeWorksheet) return;
+    
+    try {
+      await kanbanService.deleteColumn(projectId, activeWorksheet, columnId);
+      refetch();
+    } catch (error) {
+      console.error('Failed to delete column:', error);
     }
-  });
+  }, [projectId, activeWorksheet, refetch]);
 
-  // Delete column mutation
-  const deleteColumnMutation = useMutation({
-    mutationFn: (columnId: string) => kanbanService.deleteColumn(projectId, columnId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['columns', projectId, currentWorksheet?.id] });
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId, currentWorksheet?.id] });
+  // Add a task to a column
+  const addTask = useCallback(async (columnId: string, taskData: Omit<Task, 'id'>) => {
+    if (!activeWorksheet) return;
+    
+    try {
+      await kanbanService.addTask(projectId, activeWorksheet, columnId, taskData);
+      refetch();
+    } catch (error) {
+      console.error('Failed to add task:', error);
     }
-  });
-
-  // Create task mutation
-  const createTaskMutation = useMutation({
-    mutationFn: (data: Omit<KanbanTask, 'id' | 'createdAt' | 'projectId' | 'worksheetId' | 'comments' | 'attachments'>) => 
-      currentWorksheet 
-        ? kanbanService.createTask(projectId, { ...data, worksheetId: currentWorksheet.id }) 
-        : Promise.reject('No worksheet selected'),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId, currentWorksheet?.id] });
-    }
-  });
-
-  // Update task mutation
-  const updateTaskMutation = useMutation({
-    mutationFn: ({ taskId, updates }: { taskId: string, updates: Partial<KanbanTask> }) => 
-      kanbanService.updateTask(projectId, taskId, updates),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId, currentWorksheet?.id] });
-    }
-  });
-
-  // Delete task mutation
-  const deleteTaskMutation = useMutation({
-    mutationFn: (taskId: string) => kanbanService.deleteTask(projectId, taskId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId, currentWorksheet?.id] });
-    }
-  });
-
-  // Add comment mutation
-  const addCommentMutation = useMutation({
-    mutationFn: ({ 
-      taskId, 
-      content, 
-      authorId, 
-      authorName 
-    }: { 
-      taskId: string; 
-      content: string; 
-      authorId: string; 
-      authorName: string 
-    }) => 
-      kanbanService.addComment(projectId, taskId, { content, authorId, authorName }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId, currentWorksheet?.id] });
-    }
-  });
-
-  // Add attachment mutation
-  const addAttachmentMutation = useMutation({
-    mutationFn: ({ 
-      taskId, 
-      name, 
-      url, 
-      type, 
-      size 
-    }: { 
-      taskId: string; 
-      name: string; 
-      url: string; 
-      type: string; 
-      size: number 
-    }) => 
-      kanbanService.addAttachment(projectId, taskId, { name, url, type, size }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId, currentWorksheet?.id] });
-    }
-  });
-
-  // Create a new worksheet
-  const createWorksheet = useCallback((title: string, description?: string) => {
-    createWorksheetMutation.mutate({ title, description });
-  }, [createWorksheetMutation]);
-
-  // Create a new column
-  const createColumn = useCallback((title: string, color: string = 'bg-slate-100') => {
-    createColumnMutation.mutate({ title, color });
-  }, [createColumnMutation]);
-
-  // Update a column
-  const updateColumn = useCallback((columnId: string, updates: Partial<KanbanColumn>) => {
-    updateColumnMutation.mutate({ columnId, updates });
-  }, [updateColumnMutation]);
-
-  // Delete a column
-  const deleteColumn = useCallback((columnId: string) => {
-    deleteColumnMutation.mutate(columnId);
-  }, [deleteColumnMutation]);
-
-  // Create a new task
-  const createTask = useCallback((data: Omit<KanbanTask, 'id' | 'createdAt' | 'projectId' | 'worksheetId'>) => {
-    createTaskMutation.mutate(data);
-  }, [createTaskMutation]);
+  }, [projectId, activeWorksheet, refetch]);
 
   // Update a task
-  const updateTask = useCallback((taskId: string, updates: Partial<KanbanTask>) => {
-    updateTaskMutation.mutate({ taskId, updates });
-  }, [updateTaskMutation]);
+  const updateTask = useCallback(async (columnId: string, taskId: string, taskData: Partial<Task>) => {
+    if (!activeWorksheet) return;
+    
+    try {
+      await kanbanService.updateTask(projectId, activeWorksheet, columnId, taskId, taskData);
+      refetch();
+    } catch (error) {
+      console.error('Failed to update task:', error);
+    }
+  }, [projectId, activeWorksheet, refetch]);
 
   // Delete a task
-  const deleteTask = useCallback((taskId: string) => {
-    deleteTaskMutation.mutate(taskId);
-  }, [deleteTaskMutation]);
+  const deleteTask = useCallback(async (columnId: string, taskId: string) => {
+    if (!activeWorksheet) return;
+    
+    try {
+      await kanbanService.deleteTask(projectId, activeWorksheet, columnId, taskId);
+      refetch();
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+    }
+  }, [projectId, activeWorksheet, refetch]);
 
-  // Move a task to a different status
-  const moveTask = useCallback((taskId: string, newStatus: KanbanStatus) => {
-    updateTaskMutation.mutate({ taskId, updates: { status: newStatus } });
-  }, [updateTaskMutation]);
+  // Move a task between columns
+  const moveTask = useCallback(async (
+    taskId: string,
+    sourceColumnId: string,
+    destinationColumnId: string,
+    destinationIndex: number
+  ) => {
+    if (!activeWorksheet) return;
+    
+    try {
+      await kanbanService.moveTask(
+        projectId,
+        activeWorksheet,
+        taskId,
+        sourceColumnId,
+        destinationColumnId,
+        destinationIndex
+      );
+      refetch();
+    } catch (error) {
+      console.error('Failed to move task:', error);
+    }
+  }, [projectId, activeWorksheet, refetch]);
+
+  // Add a new worksheet
+  const addWorksheet = useCallback(async (name: string) => {
+    try {
+      const newWorksheet = await kanbanService.addWorksheet(projectId, { name });
+      refetch();
+      return newWorksheet;
+    } catch (error) {
+      console.error('Failed to add worksheet:', error);
+      return null;
+    }
+  }, [projectId, refetch]);
 
   // Add a comment to a task
-  const addComment = useCallback((taskId: string, content: string, authorId: string, authorName: string) => {
-    addCommentMutation.mutate({ taskId, content, authorId, authorName });
-  }, [addCommentMutation]);
-
-  // Add attachment to a task
-  const addAttachment = useCallback((taskId: string, name: string, url: string, type: string, size: number) => {
-    addAttachmentMutation.mutate({ taskId, name, url, type, size });
-  }, [addAttachmentMutation]);
-
-  // Group tasks by status for display
-  const getTasksByStatus = useCallback(() => {
-    const tasksByStatus: Record<string, KanbanTask[]> = {};
+  const addComment = useCallback(async (
+    columnId: string,
+    taskId: string,
+    comment: { text: string, userId: string }
+  ) => {
+    if (!activeWorksheet) return;
     
-    columns.forEach(column => {
-      tasksByStatus[column.status] = tasks.filter(task => task.status === column.status);
-    });
-    
-    return tasksByStatus;
-  }, [tasks, columns]);
+    try {
+      await kanbanService.addTaskComment(
+        projectId,
+        activeWorksheet,
+        columnId,
+        taskId,
+        comment
+      );
+      refetch();
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+    }
+  }, [projectId, activeWorksheet, refetch]);
 
-  const loading = isLoadingWorksheets || isLoadingColumns || isLoadingTasks;
+  // Add an attachment to a task
+  const addAttachment = useCallback(async (
+    columnId: string,
+    taskId: string,
+    attachment: { name: string, url: string, type: string, size: number }
+  ) => {
+    if (!activeWorksheet) return;
+    
+    try {
+      await kanbanService.addTaskAttachment(
+        projectId,
+        activeWorksheet,
+        columnId,
+        taskId,
+        attachment
+      );
+      refetch();
+    } catch (error) {
+      console.error('Failed to add attachment:', error);
+    }
+  }, [projectId, activeWorksheet, refetch]);
 
   return {
     worksheets,
-    currentWorksheet,
-    setCurrentWorksheet,
-    tasks,
-    columns,
-    loading,
-    createWorksheet,
-    createColumn,
+    activeWorksheet,
+    setActiveWorksheet,
+    getActiveWorksheet,
+    isLoading,
+    error,
+    refetch,
+    addColumn,
     updateColumn,
     deleteColumn,
-    createTask,
-    updateTask, 
+    addTask,
+    updateTask,
     deleteTask,
     moveTask,
+    addWorksheet,
     addComment,
-    addAttachment,
-    getTasksByStatus
+    addAttachment
   };
 }

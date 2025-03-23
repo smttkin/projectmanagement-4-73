@@ -4,7 +4,7 @@ import { Project } from '@/types/project';
 import { toast } from 'sonner';
 
 // Import sample project data
-import { projects as mockProjects } from '@/data/projects';
+import { projectsData as mockProjects } from '@/data/projects';
 
 class ProjectService extends ApiService {
   private storageKey = 'projects_data';
