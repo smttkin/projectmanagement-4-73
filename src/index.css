@@ -138,6 +138,12 @@
   }
   
   /* Enhanced Kanban scrollbar styles */
+  .kanban-scroll {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.primary.DEFAULT') theme('colors.muted.DEFAULT');
+  }
+  
   .kanban-scroll::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -150,12 +156,21 @@
   }
 
   .kanban-scroll::-webkit-scrollbar-thumb {
-    background: theme('colors.muted.foreground');
+    background: theme('colors.primary.DEFAULT/0.7');
     border-radius: 10px;
   }
 
   .kanban-scroll::-webkit-scrollbar-thumb:hover {
     background: theme('colors.primary.DEFAULT');
+  }
+  
+  /* Scroll snap utilities */
+  .scroll-snap-align-start {
+    scroll-snap-align: start;
+  }
+  
+  .scroll-snap-type-x-mandatory {
+    scroll-snap-type: x mandatory;
   }
 }
 

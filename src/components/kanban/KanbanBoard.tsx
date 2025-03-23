@@ -1,8 +1,9 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import KanbanColumn from './KanbanColumn';
 import { KanbanTask, KanbanStatus, KanbanWorksheet } from '@/types/kanban';
 import { Button } from '@/components/ui/button';
-import { Plus, Layout, MoreHorizontal, X, Trash2, MessageSquare, Paperclip, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Layout, MoreHorizontal, X, Trash2, MessageSquare, Paperclip, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useKanban } from '@/hooks/useKanban';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
@@ -11,7 +12,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogClose,
   DialogDescription
 } from "@/components/ui/dialog";
@@ -108,6 +108,8 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
   
   const [columnWidth, setColumnWidth] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [currentScrollIndex, setCurrentScrollIndex] = useState(0);
+  const [columnsPerView, setColumnsPerView] = useState(3);
   
   useEffect(() => {
     const updateWidths = () => {
@@ -115,7 +117,13 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
         const container = scrollContainerRef.current;
         const containerWidth = container.offsetWidth;
         setContainerWidth(containerWidth);
-        const colWidth = (containerWidth - 24) / 3;
+        
+        // Calculate how many columns can fit in the view
+        const calculatedColumnsPerView = Math.floor(containerWidth / 320) || 3;
+        setColumnsPerView(calculatedColumnsPerView);
+        
+        // Set column width based on the container width and columns per view
+        const colWidth = (containerWidth - 24) / columnsPerView;
         setColumnWidth(colWidth);
       }
     };
@@ -127,6 +135,37 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
       window.removeEventListener('resize', updateWidths);
     };
   }, []);
+  
+  const handleWheelScroll = (e: React.WheelEvent) => {
+    if (Math.abs(e.deltaX) < Math.abs(e.deltaY) && e.deltaY !== 0) {
+      // If vertical scrolling is more prominent, convert it to horizontal
+      if (boardRef.current) {
+        e.preventDefault();
+        boardRef.current.scrollLeft += e.deltaY;
+      }
+    }
+  };
+
+  const scrollToColumn = (index: number) => {
+    if (boardRef.current && index >= 0 && index < columns.length) {
+      setCurrentScrollIndex(index);
+      const scrollPosition = index * columnWidth;
+      boardRef.current.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const scrollLeft = () => {
+    const newIndex = Math.max(0, currentScrollIndex - columnsPerView);
+    scrollToColumn(newIndex);
+  };
+
+  const scrollRight = () => {
+    const newIndex = Math.min(columns.length - 1, currentScrollIndex + columnsPerView);
+    scrollToColumn(newIndex);
+  };
   
   const closeCreateColumnModal = () => {
     setIsCreateColumnOpen(false);
@@ -270,58 +309,81 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
       
       <div className="relative flex-1 mt-4">
         <div className="h-[calc(100vh-250px)] overflow-hidden" ref={scrollContainerRef}>
-          <ScrollArea className="h-full">
-            <div 
-              ref={boardRef}
-              className="flex space-x-2 pb-6 pr-12"
-              style={{ minWidth: '100%' }}
+          <div className="flex justify-between mb-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={scrollLeft} 
+              disabled={currentScrollIndex === 0}
+              className="flex items-center gap-1"
             >
-              {columns.map((column, index) => (
-                <div 
-                  key={column.id} 
-                  className={cn(
-                    "transition-all duration-200",
-                    index >= columns.length - 1 ? "" : ""
-                  )}
-                  style={{ 
-                    width: `${columnWidth}px`,
-                    minWidth: `${columnWidth}px`,
-                    position: 'relative'
+              <ChevronLeft size={16} />
+              Previous
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={scrollRight} 
+              disabled={currentScrollIndex >= columns.length - columnsPerView}
+              className="flex items-center gap-1"
+            >
+              Next
+              <ChevronRight size={16} />
+            </Button>
+          </div>
+          
+          <div 
+            ref={boardRef}
+            className="flex space-x-2 pb-6 pr-4 overflow-x-auto kanban-scroll"
+            style={{ minWidth: '100%', scrollSnapType: 'x mandatory' }}
+            onWheel={handleWheelScroll}
+          >
+            {columns.map((column, index) => (
+              <div 
+                key={column.id} 
+                className={cn(
+                  "transition-all duration-200 scroll-snap-align-start",
+                  index >= columnsPerView ? "opacity-50" : ""
+                )}
+                style={{ 
+                  width: `${columnWidth}px`,
+                  minWidth: `${columnWidth}px`,
+                  position: 'relative',
+                  scrollSnapAlign: 'start'
+                }}
+              >
+                <KanbanColumn
+                  column={column}
+                  tasks={tasksByStatus[column.status] || []}
+                  onAddTask={(status) => {
+                    setSelectedTaskStatus(status);
+                    setIsCreateTaskOpen(true);
                   }}
-                >
-                  <KanbanColumn
-                    column={column}
-                    tasks={tasksByStatus[column.status] || []}
-                    onAddTask={(status) => {
-                      setSelectedTaskStatus(status);
-                      setIsCreateTaskOpen(true);
-                    }}
-                    onTaskClick={handleTaskClick}
-                    onDrop={handleDrop}
-                    onUpdateColumn={updateColumn}
-                    onDeleteColumn={deleteColumn}
-                    onEditTask={handleTaskClick}
-                    onDeleteTask={deleteTask}
-                  />
-                  
-                  {index === 3 && (
-                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm pointer-events-none" />
-                  )}
-                </div>
-              ))}
-              
-              <div style={{ width: `${columnWidth}px`, minWidth: `${columnWidth}px` }}>
-                <AddColumnButton 
-                  isOpen={isCreateColumnOpen}
-                  setIsOpen={setIsCreateColumnOpen}
-                  columnData={newColumn}
-                  setColumnData={setNewColumn}
-                  onClose={closeCreateColumnModal}
-                  onSubmit={handleCreateColumn}
+                  onTaskClick={handleTaskClick}
+                  onDrop={handleDrop}
+                  onUpdateColumn={updateColumn}
+                  onDeleteColumn={deleteColumn}
+                  onEditTask={handleTaskClick}
+                  onDeleteTask={deleteTask}
                 />
+                
+                {index === columnsPerView && (
+                  <div className="absolute inset-0 bg-background/80 backdrop-blur-sm pointer-events-none" />
+                )}
               </div>
+            ))}
+            
+            <div style={{ width: `${columnWidth}px`, minWidth: `${columnWidth}px` }}>
+              <AddColumnButton 
+                isOpen={isCreateColumnOpen}
+                setIsOpen={setIsCreateColumnOpen}
+                columnData={newColumn}
+                setColumnData={setNewColumn}
+                onClose={closeCreateColumnModal}
+                onSubmit={handleCreateColumn}
+              />
             </div>
-          </ScrollArea>
+          </div>
         </div>
       </div>
       
