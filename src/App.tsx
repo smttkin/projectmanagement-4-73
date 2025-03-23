@@ -18,6 +18,7 @@ import Timeline from './pages/Timeline';
 import DatabaseSchema from './pages/DatabaseSchema';
 import Reports from './pages/Reports';
 import Index from './pages/Index';
+import Projects from './pages/Projects';
 
 // Initialize QueryClient
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/projects" element={<Projects />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/team" element={<Team />} />

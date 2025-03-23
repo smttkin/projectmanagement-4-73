@@ -9,7 +9,8 @@ import {
   Clock, 
   FileText, 
   BarChart3,
-  Database
+  Database,
+  FolderKanban
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -59,6 +60,17 @@ const Navbar: React.FC = () => {
               <Link to="/dashboard" className="flex items-center text-sm">
                 <LayoutDashboard className="h-4 w-4 mr-1" />
                 <span className="hidden md:inline">Dashboard</span>
+              </Link>
+            </Button>
+            
+            <Button
+              variant={isActive('/projects') ? "secondary" : "ghost"}
+              size="sm"
+              asChild
+            >
+              <Link to="/projects" className="flex items-center text-sm">
+                <FolderKanban className="h-4 w-4 mr-1" />
+                <span className="hidden md:inline">Projects</span>
               </Link>
             </Button>
             

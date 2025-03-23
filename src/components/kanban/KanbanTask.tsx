@@ -25,10 +25,20 @@ interface KanbanTaskProps {
   onDelete?: (taskId: string) => void;
 }
 
+// Theme-reactive priority configurations
 const priorityConfig = {
-  high: { color: 'bg-red-100 text-red-800 border-red-200', label: 'High' },
-  medium: { color: 'bg-orange-100 text-orange-800 border-orange-200', label: 'Medium' },
-  low: { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Low' },
+  high: { 
+    color: 'bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800', 
+    label: 'High' 
+  },
+  medium: { 
+    color: 'bg-orange-100 dark:bg-orange-950/50 text-orange-800 dark:text-orange-300 border-orange-200 dark:border-orange-800', 
+    label: 'Medium' 
+  },
+  low: { 
+    color: 'bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800', 
+    label: 'Low' 
+  },
 };
 
 const KanbanTaskComponent: React.FC<KanbanTaskProps> = ({ 
@@ -43,7 +53,7 @@ const KanbanTaskComponent: React.FC<KanbanTaskProps> = ({
   
   return (
     <Card 
-      className="mb-2 cursor-pointer hover:shadow-md transition-shadow"
+      className="mb-2 cursor-pointer hover:shadow-md transition-shadow border-border dark:border-border/60 bg-card hover:bg-card/80 dark:hover:bg-card/90"
       draggable
       onDragStart={(e) => onDragStart?.(e, task)}
     >
@@ -72,7 +82,7 @@ const KanbanTaskComponent: React.FC<KanbanTaskProps> = ({
       
         {/* Task title */}
         <h3 
-          className="text-sm font-medium mb-1 pr-6"
+          className="text-sm font-medium mb-1 pr-6 text-foreground"
           onClick={() => onClick?.(task)}
         >
           {task.title}

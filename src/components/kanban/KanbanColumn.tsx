@@ -84,12 +84,35 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     }
   };
   
+  // Apply different background colors based on column type and theme
+  const getColumnStyles = () => {
+    // Default color classes 
+    const baseClasses = "flex flex-col h-full min-w-[280px] rounded-md border";
+    
+    if (column.color) {
+      return cn(baseClasses, column.color);
+    }
+    
+    // Apply theme-reactive colors based on column status
+    switch (column.status) {
+      case 'todo':
+        return cn(baseClasses, "bg-card border-border");
+      case 'in-progress':
+        return cn(baseClasses, "bg-card border-primary/30");
+      case 'in-review':
+        return cn(baseClasses, "bg-card border-orange-500/30");
+      case 'done':
+        return cn(baseClasses, "bg-card border-green-500/30");
+      case 'blocked':
+        return cn(baseClasses, "bg-card border-destructive/30");
+      default:
+        return cn(baseClasses, "bg-card border-border");
+    }
+  };
+  
   return (
     <div 
-      className={cn(
-        "flex flex-col h-full min-w-[280px] rounded-md border border-border",
-        column.color
-      )}
+      className={getColumnStyles()}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
@@ -107,7 +130,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
           <div className="flex items-center justify-between w-full">
             <h3 className="font-medium text-sm">{column.title}</h3>
             <div className="flex items-center">
-              <span className="text-xs text-muted-foreground bg-background px-1.5 py-0.5 rounded mr-1">
+              <span className="text-xs text-muted-foreground bg-background/70 dark:bg-background/30 px-1.5 py-0.5 rounded mr-1">
                 {tasks.length}
               </span>
               
@@ -154,7 +177,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
         <Button 
           variant="ghost" 
           size="sm" 
-          className="w-full justify-start text-xs h-8"
+          className="w-full justify-start text-xs h-8 hover:bg-primary/10"
           onClick={() => onAddTask?.(column.status)}
         >
           <Plus className="h-3 w-3 mr-1" />
