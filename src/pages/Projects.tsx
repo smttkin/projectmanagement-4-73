@@ -18,10 +18,33 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import ProjectCard from '@/components/ProjectCard';
+import ProjectCard, { ProjectCardProps } from '@/components/ProjectCard';
 import { projectService } from '@/services';
 import { toast } from 'sonner';
-import { ProjectCardProps } from '@/components/ProjectCard';
+import { Project } from '@/types/project';
+
+// Helper function to convert Project to ProjectCardProps
+const mapProjectToCardProps = (project: Project): ProjectCardProps => {
+  return {
+    id: project.id,
+    title: project.title,
+    description: project.description,
+    progress: project.progress,
+    dueDate: project.dueDate,
+    priority: project.priority,
+    status: project.status === 'active' ? 'in-progress' : 
+            project.status === 'completed' ? 'completed' : 
+            project.status === 'on-hold' ? 'at-risk' : 'not-started',
+    members: project.teamMembers.map(member => ({
+      id: member.id,
+      name: member.name,
+      avatar: member.avatar
+    })),
+    createdAt: project.createdAt,
+    updatedAt: project.updatedAt,
+    deadline: project.dueDate
+  };
+};
 
 const ProjectsPage = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -37,7 +60,8 @@ const ProjectsPage = () => {
       try {
         setIsLoading(true);
         const data = await projectService.getProjects();
-        setProjects(data);
+        const mappedProjects = data.map(mapProjectToCardProps);
+        setProjects(mappedProjects);
       } catch (error) {
         console.error('Error fetching projects:', error);
         toast.error('Failed to load projects');
@@ -80,9 +104,9 @@ const ProjectsPage = () => {
       // Apply sorting
       switch (sortBy) {
         case 'newest':
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime();
         case 'oldest':
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          return new Date(a.createdAt || '').getTime() - new Date(b.createdAt || '').getTime();
         case 'name-asc':
           return a.title.localeCompare(b.title);
         case 'name-desc':
