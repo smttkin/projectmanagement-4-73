@@ -249,7 +249,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
       
       {/* Kanban board content */}
       <div className="relative flex-1 mt-4">
-        <ScrollArea orientation="horizontal" className="h-[calc(100vh-250px)]">
+        <ScrollArea className="h-[calc(100vh-250px)]">
           <div 
             ref={boardRef}
             className="flex space-x-4 pb-6"
