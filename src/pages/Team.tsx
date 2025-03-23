@@ -10,7 +10,8 @@ import {
   Filter, 
   UserRound,
   CheckCircle2,
-  X
+  X,
+  Database
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -50,6 +51,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { teamService } from '@/services';
 
 // Mock team members data
 const teamMembers = [
@@ -188,6 +190,10 @@ const Team = () => {
     // In a real app, this might trigger a call through a web interface or open a phone app
     window.open(`tel:${phone}`);
   };
+  
+  const navigateToDbSchema = () => {
+    navigate('/database-schema');
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -198,10 +204,16 @@ const Team = () => {
             <h1 className="text-3xl font-bold tracking-tight">Team</h1>
             <p className="text-muted-foreground mt-1">Manage your team members and their access</p>
           </div>
-          <Button className="mt-4 md:mt-0" onClick={() => setIsAddMemberModalOpen(true)}>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Add Team Member
-          </Button>
+          <div className="flex mt-4 md:mt-0 gap-2">
+            <Button variant="outline" onClick={navigateToDbSchema}>
+              <Database className="mr-2 h-4 w-4" />
+              DB Schema
+            </Button>
+            <Button onClick={() => setIsAddMemberModalOpen(true)}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add Team Member
+            </Button>
+          </div>
         </div>
         
         {/* Department summary cards */}
