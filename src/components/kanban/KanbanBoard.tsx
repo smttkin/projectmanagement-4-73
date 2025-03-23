@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import KanbanColumn from './KanbanColumn';
-import { KanbanTask, KanbanStatus, KanbanWorksheet, KanbanColumn as KanbanColumnType } from '@/types/kanban';
+import { KanbanTask, KanbanStatus, KanbanWorksheet } from '@/types/kanban';
 import { Button } from '@/components/ui/button';
 import { Plus, Layout, MoreHorizontal, X, Trash2, MessageSquare, Paperclip } from 'lucide-react';
 import { useKanban } from '@/hooks/useKanban';
@@ -52,13 +52,13 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
     currentWorksheet,
     setCurrentWorksheet,
     createWorksheet,
-    createTask,
+    addTask,
     updateTask,
     deleteTask,
     moveTask,
     getTasksByStatus,
     columns,
-    createColumn,
+    addColumn,
     updateColumn,
     deleteColumn,
     addComment,
@@ -121,12 +121,13 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
       return;
     }
     
-    createTask({
+    addTask({
       title: newTask.title,
       description: newTask.description,
       status: selectedTaskStatus,
       priority: newTask.priority,
-      dueDate: newTask.dueDate || undefined
+      dueDate: newTask.dueDate || undefined,
+      worksheetId: currentWorksheet?.id || ''
     });
     
     setNewTask({
@@ -165,7 +166,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
       return;
     }
     
-    createColumn(newColumn.title, newColumn.color);
+    addColumn(newColumn.title, newColumn.color);
     
     setNewColumn({
       title: '',
@@ -571,7 +572,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
                       <div className="flex justify-between items-start mb-1">
                         <span className="text-xs font-medium">{comment.authorName}</span>
                         <span className="text-xs text-muted-foreground">
-                          {comment.createdAt.toLocaleDateString()}
+                          {new Date(comment.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                       <p className="text-sm">{comment.content}</p>
@@ -583,7 +584,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
                               <div className="flex justify-between items-start mb-1">
                                 <span className="text-xs font-medium">{reply.authorName}</span>
                                 <span className="text-xs text-muted-foreground">
-                                  {reply.createdAt.toLocaleDateString()}
+                                  {new Date(reply.createdAt).toLocaleDateString()}
                                 </span>
                               </div>
                               <p className="text-sm">{reply.content}</p>

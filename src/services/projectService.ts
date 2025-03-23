@@ -1,10 +1,9 @@
-
 import { ApiService } from './api';
 import { Project } from '@/types/project';
 import { toast } from 'sonner';
 
 // Import sample project data
-import { projectsData as mockProjects } from '@/data/projects';
+import { projectsData } from '@/data/projects';
 
 class ProjectService extends ApiService {
   private storageKey = 'projects_data';
@@ -17,7 +16,7 @@ class ProjectService extends ApiService {
   // Initialize local storage with mock data if empty
   private initializeStorage(): void {
     if (!localStorage.getItem(this.storageKey)) {
-      localStorage.setItem(this.storageKey, JSON.stringify(mockProjects));
+      localStorage.setItem(this.storageKey, JSON.stringify(projectsData));
     }
   }
   
