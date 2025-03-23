@@ -21,29 +21,7 @@ import ProjectCard, { ProjectCardProps } from '@/components/ProjectCard';
 import { projectService } from '@/services';
 import { toast } from 'sonner';
 import { Project } from '@/types/project';
-
-// Helper function to convert Project to ProjectCardProps
-const mapProjectToCardProps = (project: Project): ProjectCardProps => {
-  return {
-    id: project.id,
-    title: project.title,
-    description: project.description,
-    progress: project.progress,
-    dueDate: project.dueDate,
-    priority: project.priority,
-    status: project.status === 'active' ? 'in-progress' : 
-            project.status === 'completed' ? 'completed' : 
-            project.status === 'on-hold' ? 'at-risk' : 'not-started',
-    members: project.teamMembers.map(member => ({
-      id: member.id,
-      name: member.name,
-      avatar: member.avatar
-    })),
-    createdAt: project.createdAt,
-    updatedAt: project.updatedAt,
-    deadline: project.dueDate
-  };
-};
+import { projectToCardProps } from '@/utils/projectMappers';
 
 const ProjectsPage = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -61,7 +39,7 @@ const ProjectsPage = () => {
         const data = await projectService.getProjects();
         
         if (data && data.length > 0) {
-          const mappedProjects = data.map(mapProjectToCardProps);
+          const mappedProjects = data.map(projectToCardProps);
           setProjects(mappedProjects);
         } else {
           // If no projects were returned, show a message

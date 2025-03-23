@@ -15,8 +15,9 @@ import ProgressSection from '../components/dashboard/ProgressSection';
 import TeamSection from '../components/dashboard/TeamSection';
 import DeadlinesSection from '../components/dashboard/DeadlinesSection';
 import ActivitySection from '../components/dashboard/ActivitySection';
-import { projectsData } from '../data/projects';
+import { projectService } from '@/services';
 import { ProjectCardProps } from '@/components/ProjectCard';
+import { projectToCardProps } from '@/utils/projectMappers';
 
 // Mock data for upcoming deadlines
 const upcomingDeadlines = [
@@ -42,7 +43,22 @@ const upcomingDeadlines = [
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const [projects, setProjects] = useState<ProjectCardProps[]>(projectsData);
+  const [projects, setProjects] = useState<ProjectCardProps[]>([]);
+  
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const data = await projectService.getProjects();
+        if (data && data.length > 0) {
+          setProjects(data.map(projectToCardProps));
+        }
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+      }
+    };
+    
+    fetchProjects();
+  }, []);
   
   // Update statistics when projects change
   const totalProjects = projects.length;

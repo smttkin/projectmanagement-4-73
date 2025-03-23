@@ -40,36 +40,12 @@ class ProjectService extends ApiService {
       
       // If projects array is empty, use fallback mock data
       if (!projects || projects.length === 0) {
-        // Convert projectsData to Project[] format
-        const mappedProjects: Project[] = projectsData.map(p => ({
-          id: p.id,
-          title: p.title,
-          description: p.description,
-          status: p.status === 'completed' ? 'completed' : 
-                 p.status === 'in-progress' ? 'active' : 
-                 p.status === 'at-risk' ? 'on-hold' : 'cancelled',
-          priority: p.priority,
-          progress: p.progress,
-          startDate: new Date().toISOString(),
-          dueDate: p.dueDate,
-          teamMembers: p.members.map(m => ({
-            id: m.id,
-            name: m.name,
-            email: `${m.name.toLowerCase().replace(' ', '.')}@example.com`,
-            role: 'team member',
-            avatar: m.avatar
-          })),
-          tags: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }));
-        
-        // Save the mapped projects to storage
-        this.saveProjects(mappedProjects);
-        return mappedProjects;
+        // Save the mock projects to storage
+        this.saveProjects(projectsData);
+        return await this.simulateResponse(projectsData, 0); // Set error chance to 0 to avoid random errors
       }
       
-      return await this.simulateResponse(projects, 0); // Set error chance to 0 to avoid random errors
+      return await this.simulateResponse(projects, 0);
     } catch (error) {
       console.error("Error in getProjects:", error);
       // Return empty array instead of throwing to avoid crashes

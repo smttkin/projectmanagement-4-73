@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -22,8 +21,9 @@ import {
   Kanban
 } from 'lucide-react';
 import { addDays, format, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
-import { projectsData } from '@/data/projects';
+import { projectService } from '@/services';
 import { KanbanWorksheet } from '@/types/kanban';
+import { projectToCardProps } from '@/utils/projectMappers';
 
 const Timeline: React.FC = () => {
   const navigate = useNavigate();
@@ -34,44 +34,61 @@ const Timeline: React.FC = () => {
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
   const [availableWorksheets, setAvailableWorksheets] = useState<KanbanWorksheet[]>([]);
   const [selectedWorksheet, setSelectedWorksheet] = useState<string | null>(null);
+  const [projects, setProjects] = useState<any[]>([]);
 
   // Initialize data
   useEffect(() => {
-    // Load worksheets for all projects
-    const worksheets: KanbanWorksheet[] = [];
-    
-    projectsData.forEach(project => {
-      const projectWorksheets = localStorage.getItem(`worksheets-${project.id}`);
-      if (projectWorksheets) {
-        try {
-          const parsed = JSON.parse(projectWorksheets, (key, value) => {
-            if (key === 'createdAt') return new Date(value);
-            return value;
+    const fetchProjects = async () => {
+      try {
+        const projectData = await projectService.getProjects();
+        if (projectData && projectData.length > 0) {
+          const mappedProjects = projectData.map(projectToCardProps);
+          setProjects(mappedProjects);
+          
+          // Load worksheets for all projects
+          const worksheets: KanbanWorksheet[] = [];
+          
+          projectData.forEach(project => {
+            const projectWorksheets = localStorage.getItem(`worksheets-${project.id}`);
+            if (projectWorksheets) {
+              try {
+                const parsed = JSON.parse(projectWorksheets, (key, value) => {
+                  if (key === 'createdAt') return new Date(value);
+                  return value;
+                });
+                worksheets.push(...parsed);
+              } catch (error) {
+                console.error(`Error parsing worksheets for project ${project.id}:`, error);
+              }
+            }
           });
-          worksheets.push(...parsed);
-        } catch (error) {
-          console.error(`Error parsing worksheets for project ${project.id}:`, error);
+          
+          setAvailableWorksheets(worksheets);
+          
+          // Generate timeline items based on projects and their deadlines
+          const items: TimelineItem[] = mappedProjects.map(project => ({
+            id: project.id,
+            title: project.title,
+            startDate: new Date(),
+            endDate: new Date(new Date().getTime() + Math.random() * 20 * 24 * 60 * 60 * 1000),
+            status: project.status,
+            assignee: project.members[0]
+          }));
+          
+          setTimelineItems(items);
         }
+      } catch (error) {
+        console.error('Error fetching projects:', error);
       }
-    });
+    };
     
-    setAvailableWorksheets(worksheets);
-    
-    // Generate timeline items based on projects and their deadlines
-    const items: TimelineItem[] = projectsData.map(project => ({
-      id: project.id,
-      title: project.title,
-      startDate: new Date(),
-      endDate: new Date(new Date().getTime() + Math.random() * 20 * 24 * 60 * 60 * 1000),
-      status: project.status as any,
-      assignee: project.members[0]
-    }));
-    
-    setTimelineItems(items);
+    fetchProjects();
   }, []);
 
   // Update timeline items when project or worksheet selection changes
   useEffect(() => {
+    if (!projects.length) return;
+    
     if (selectedProject) {
       // Filter worksheets by selected project
       const projectWorksheets = availableWorksheets.filter(
@@ -137,14 +154,14 @@ const Timeline: React.FC = () => {
         }
       } else {
         // If no worksheets, show project as timeline items
-        const project = projectsData.find(p => p.id === selectedProject);
+        const project = projects.find(p => p.id === selectedProject);
         if (project) {
           const item: TimelineItem = {
             id: project.id,
             title: project.title,
             startDate: new Date(),
             endDate: new Date(new Date().getTime() + 15 * 24 * 60 * 60 * 1000),
-            status: project.status as any,
+            status: project.status,
             assignee: project.members[0]
           };
           
@@ -153,18 +170,18 @@ const Timeline: React.FC = () => {
       }
     } else {
       // Show all projects in timeline
-      const items: TimelineItem[] = projectsData.map(project => ({
+      const items: TimelineItem[] = projects.map(project => ({
         id: project.id,
         title: project.title,
         startDate: new Date(),
         endDate: new Date(new Date().getTime() + Math.random() * 20 * 24 * 60 * 60 * 1000),
-        status: project.status as any,
+        status: project.status,
         assignee: project.members[0]
       }));
       
       setTimelineItems(items);
     }
-  }, [selectedProject, selectedWorksheet, availableWorksheets]);
+  }, [selectedProject, selectedWorksheet, availableWorksheets, projects]);
 
   // Map Kanban status to timeline status
   const mapKanbanStatusToTimelineStatus = (
@@ -308,7 +325,7 @@ const Timeline: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Projects</SelectItem>
-                    {projectsData.map(project => (
+                    {projects.map(project => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.title}
                       </SelectItem>
