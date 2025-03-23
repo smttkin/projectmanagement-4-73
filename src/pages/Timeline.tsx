@@ -297,9 +297,9 @@ const Timeline: React.FC = () => {
               <div className="w-full sm:w-auto">
                 <Label htmlFor="projectFilter" className="text-xs mb-1 block">Project</Label>
                 <Select
-                  value={selectedProject || ""}
+                  value={selectedProject || "all"}
                   onValueChange={(value) => {
-                    setSelectedProject(value === "" ? null : value);
+                    setSelectedProject(value === "all" ? null : value);
                     setSelectedWorksheet(null);
                   }}
                 >
@@ -307,7 +307,7 @@ const Timeline: React.FC = () => {
                     <SelectValue placeholder="All Projects" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Projects</SelectItem>
+                    <SelectItem value="all">All Projects</SelectItem>
                     {projectsData.map(project => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.title}
@@ -321,13 +321,14 @@ const Timeline: React.FC = () => {
                 <div className="w-full sm:w-auto">
                   <Label htmlFor="worksheetFilter" className="text-xs mb-1 block">Kanban Board</Label>
                   <Select
-                    value={selectedWorksheet || ""}
-                    onValueChange={(value) => setSelectedWorksheet(value)}
+                    value={selectedWorksheet || "none"}
+                    onValueChange={(value) => setSelectedWorksheet(value === "none" ? null : value)}
                   >
                     <SelectTrigger id="worksheetFilter" className="w-full sm:w-[200px]">
                       <SelectValue placeholder="Select Board" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none">Select a Board</SelectItem>
                       {availableWorksheets
                         .filter(ws => ws.projectId === selectedProject)
                         .map(worksheet => (

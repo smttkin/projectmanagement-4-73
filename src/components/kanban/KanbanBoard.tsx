@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import KanbanColumn from './KanbanColumn';
 import { KanbanTask, KanbanStatus, KanbanWorksheet } from '@/types/kanban';
 import { Button } from '@/components/ui/button';
-import { Plus, Layout, MoreHorizontal, X } from 'lucide-react';
+import { Plus, Layout, MoreHorizontal, X, Trash2 } from 'lucide-react';
 import { useKanban } from '@/hooks/useKanban';
 import {
   Dialog,
