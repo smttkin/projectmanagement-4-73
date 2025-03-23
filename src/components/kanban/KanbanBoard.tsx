@@ -1,5 +1,4 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import KanbanColumn from './KanbanColumn';
 import { KanbanTask, KanbanStatus, KanbanWorksheet } from '@/types/kanban';
 import { Button } from '@/components/ui/button';
@@ -105,6 +104,29 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
   });
   
   const boardRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  const [columnWidth, setColumnWidth] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(0);
+  
+  useEffect(() => {
+    const updateWidths = () => {
+      if (scrollContainerRef.current) {
+        const container = scrollContainerRef.current;
+        const containerWidth = container.offsetWidth;
+        setContainerWidth(containerWidth);
+        const colWidth = (containerWidth - 24) / 3;
+        setColumnWidth(colWidth);
+      }
+    };
+    
+    updateWidths();
+    window.addEventListener('resize', updateWidths);
+    
+    return () => {
+      window.removeEventListener('resize', updateWidths);
+    };
+  }, []);
   
   const closeCreateColumnModal = () => {
     setIsCreateColumnOpen(false);
@@ -239,7 +261,6 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
   
   return (
     <div className="flex flex-col h-full">
-      {/* Board header with worksheet navigation */}
       <KanbanBoardHeader 
         worksheets={worksheets}
         currentWorksheet={currentWorksheet}
@@ -247,46 +268,63 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
         onCreateWorksheetClick={() => setIsCreateWorksheetOpen(true)}
       />
       
-      {/* Kanban board content */}
       <div className="relative flex-1 mt-4">
-        <ScrollArea className="h-[calc(100vh-250px)]">
-          <div 
-            ref={boardRef}
-            className="flex space-x-4 pb-6"
-            style={{ minWidth: '100%' }}
-          >
-            {columns.map(column => (
-              <KanbanColumn
-                key={column.id}
-                column={column}
-                tasks={tasksByStatus[column.status] || []}
-                onAddTask={(status) => {
-                  setSelectedTaskStatus(status);
-                  setIsCreateTaskOpen(true);
-                }}
-                onTaskClick={handleTaskClick}
-                onDrop={handleDrop}
-                onUpdateColumn={updateColumn}
-                onDeleteColumn={deleteColumn}
-                onEditTask={handleTaskClick}
-                onDeleteTask={deleteTask}
-              />
-            ))}
-            
-            {/* Add new column button */}
-            <AddColumnButton 
-              isOpen={isCreateColumnOpen}
-              setIsOpen={setIsCreateColumnOpen}
-              columnData={newColumn}
-              setColumnData={setNewColumn}
-              onClose={closeCreateColumnModal}
-              onSubmit={handleCreateColumn}
-            />
-          </div>
-        </ScrollArea>
+        <div className="h-[calc(100vh-250px)] overflow-hidden" ref={scrollContainerRef}>
+          <ScrollArea className="h-full">
+            <div 
+              ref={boardRef}
+              className="flex space-x-2 pb-6 pr-12"
+              style={{ minWidth: '100%' }}
+            >
+              {columns.map((column, index) => (
+                <div 
+                  key={column.id} 
+                  className={cn(
+                    "transition-all duration-200",
+                    index >= columns.length - 1 ? "" : ""
+                  )}
+                  style={{ 
+                    width: `${columnWidth}px`,
+                    minWidth: `${columnWidth}px`,
+                    position: 'relative'
+                  }}
+                >
+                  <KanbanColumn
+                    column={column}
+                    tasks={tasksByStatus[column.status] || []}
+                    onAddTask={(status) => {
+                      setSelectedTaskStatus(status);
+                      setIsCreateTaskOpen(true);
+                    }}
+                    onTaskClick={handleTaskClick}
+                    onDrop={handleDrop}
+                    onUpdateColumn={updateColumn}
+                    onDeleteColumn={deleteColumn}
+                    onEditTask={handleTaskClick}
+                    onDeleteTask={deleteTask}
+                  />
+                  
+                  {index === 3 && (
+                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm pointer-events-none" />
+                  )}
+                </div>
+              ))}
+              
+              <div style={{ width: `${columnWidth}px`, minWidth: `${columnWidth}px` }}>
+                <AddColumnButton 
+                  isOpen={isCreateColumnOpen}
+                  setIsOpen={setIsCreateColumnOpen}
+                  columnData={newColumn}
+                  setColumnData={setNewColumn}
+                  onClose={closeCreateColumnModal}
+                  onSubmit={handleCreateColumn}
+                />
+              </div>
+            </div>
+          </ScrollArea>
+        </div>
       </div>
       
-      {/* Create Task Dialog */}
       <CreateTaskDialog 
         isOpen={isCreateTaskOpen}
         setIsOpen={setIsCreateTaskOpen}
@@ -298,7 +336,6 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
         onSubmit={handleCreateTask}
       />
       
-      {/* Create Worksheet Dialog */}
       <CreateWorksheetDialog
         isOpen={isCreateWorksheetOpen}
         setIsOpen={setIsCreateWorksheetOpen}
@@ -307,7 +344,6 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
         onSubmit={handleCreateWorksheet}
       />
       
-      {/* Edit Task Dialog */}
       {selectedTask && (
         <TaskDetailsDialog
           isOpen={isEditTaskOpen}
