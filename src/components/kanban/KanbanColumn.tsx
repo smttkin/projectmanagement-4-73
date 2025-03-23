@@ -113,7 +113,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="xs" className="h-6 w-6 p-0">
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                     <MoreHorizontal className="h-3.5 w-3.5" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -175,7 +175,10 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction 
               className="bg-destructive hover:bg-destructive/90"
-              onClick={() => onDeleteColumn?.(column.id)}
+              onClick={() => {
+                onDeleteColumn?.(column.id);
+                setShowDeleteAlert(false);
+              }}
             >
               Delete
             </AlertDialogAction>

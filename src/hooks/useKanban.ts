@@ -1,450 +1,240 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { KanbanTask, KanbanWorksheet, KanbanStatus, KanbanColumn } from '@/types/kanban';
+import { kanbanService } from '@/services';
 import { toast } from 'sonner';
-
-const DEFAULT_COLUMNS = [
-  { status: 'todo', title: 'To Do', color: 'bg-slate-100' },
-  { status: 'in-progress', title: 'In Progress', color: 'bg-blue-100' },
-  { status: 'review', title: 'Review', color: 'bg-amber-100' },
-  { status: 'done', title: 'Done', color: 'bg-green-100' }
-];
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export function useKanban(projectId: string) {
-  const [worksheets, setWorksheets] = useState<KanbanWorksheet[]>([]);
-  const [tasks, setTasks] = useState<KanbanTask[]>([]);
-  const [columns, setColumns] = useState<KanbanColumn[]>([]);
   const [currentWorksheet, setCurrentWorksheet] = useState<KanbanWorksheet | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  // Initialize worksheets and tasks from localStorage
-  useEffect(() => {
-    const loadWorksheets = () => {
-      try {
-        const storedWorksheets = localStorage.getItem(`worksheets-${projectId}`);
-        const parsedWorksheets = storedWorksheets 
-          ? JSON.parse(storedWorksheets, (key, value) => {
-              if (key === 'createdAt') return new Date(value);
-              return value;
-            })
-          : [];
-        
-        setWorksheets(parsedWorksheets);
-        
-        // Set the first worksheet as current if available
-        if (parsedWorksheets.length > 0 && !currentWorksheet) {
-          setCurrentWorksheet(parsedWorksheets[0]);
-        } else if (parsedWorksheets.length === 0) {
-          // Create a default worksheet if none exist
-          const defaultWorksheet = {
-            id: `ws-${Date.now()}`,
-            title: 'Main Board',
-            description: 'Default kanban board',
-            projectId,
-            createdAt: new Date()
-          };
-          
-          setWorksheets([defaultWorksheet]);
-          setCurrentWorksheet(defaultWorksheet);
-          localStorage.setItem(`worksheets-${projectId}`, JSON.stringify([defaultWorksheet]));
-        }
-      } catch (error) {
-        console.error('Error loading worksheets:', error);
+  // Fetch worksheets
+  const { 
+    data: worksheets = [], 
+    isLoading: isLoadingWorksheets 
+  } = useQuery({
+    queryKey: ['worksheets', projectId],
+    queryFn: () => kanbanService.getWorksheets(projectId),
+    onSuccess: (data) => {
+      // Set the first worksheet as current if none selected
+      if (data.length > 0 && !currentWorksheet) {
+        setCurrentWorksheet(data[0]);
       }
-    };
-
-    const loadTasks = () => {
-      try {
-        const storedTasks = localStorage.getItem(`kanban-tasks-${projectId}`);
-        if (storedTasks) {
-          const parsedTasks = JSON.parse(storedTasks, (key, value) => {
-            if (key === 'createdAt') return new Date(value);
-            return value;
-          });
-          setTasks(parsedTasks);
-        }
-      } catch (error) {
-        console.error('Error loading tasks:', error);
-      }
-    };
-
-    const loadColumns = () => {
-      try {
-        const storedColumns = localStorage.getItem(`kanban-columns-${projectId}`);
-        if (storedColumns) {
-          const parsedColumns = JSON.parse(storedColumns);
-          setColumns(parsedColumns);
-        }
-      } catch (error) {
-        console.error('Error loading columns:', error);
-      }
-    };
-
-    loadWorksheets();
-    loadTasks();
-    loadColumns();
-    setLoading(false);
-  }, [projectId, currentWorksheet]);
-
-  // Save worksheets to localStorage when they change
-  useEffect(() => {
-    if (worksheets.length > 0) {
-      localStorage.setItem(`worksheets-${projectId}`, JSON.stringify(worksheets));
     }
-  }, [worksheets, projectId]);
+  });
 
-  // Save tasks to localStorage when they change
-  useEffect(() => {
-    if (tasks.length > 0) {
-      localStorage.setItem(`kanban-tasks-${projectId}`, JSON.stringify(tasks));
-    }
-  }, [tasks, projectId]);
+  // Fetch columns for current worksheet
+  const { 
+    data: columns = [], 
+    isLoading: isLoadingColumns 
+  } = useQuery({
+    queryKey: ['columns', projectId, currentWorksheet?.id],
+    queryFn: () => currentWorksheet 
+      ? kanbanService.getColumns(projectId, currentWorksheet.id) 
+      : Promise.resolve([]),
+    enabled: !!currentWorksheet
+  });
 
-  // Save columns to localStorage when they change
-  useEffect(() => {
-    if (columns.length > 0) {
-      localStorage.setItem(`kanban-columns-${projectId}`, JSON.stringify(columns));
+  // Fetch tasks for current worksheet
+  const { 
+    data: tasks = [], 
+    isLoading: isLoadingTasks 
+  } = useQuery({
+    queryKey: ['tasks', projectId, currentWorksheet?.id],
+    queryFn: () => currentWorksheet 
+      ? kanbanService.getTasks(projectId, currentWorksheet.id) 
+      : Promise.resolve([]),
+    enabled: !!currentWorksheet
+  });
+
+  // Create worksheet mutation
+  const createWorksheetMutation = useMutation({
+    mutationFn: (data: Pick<KanbanWorksheet, 'title' | 'description'>) => 
+      kanbanService.createWorksheet(projectId, data),
+    onSuccess: (newWorksheet) => {
+      queryClient.invalidateQueries({ queryKey: ['worksheets', projectId] });
+      setCurrentWorksheet(newWorksheet);
     }
-  }, [columns, projectId]);
+  });
+
+  // Create column mutation
+  const createColumnMutation = useMutation({
+    mutationFn: (data: { title: string; color: string }) => 
+      currentWorksheet 
+        ? kanbanService.createColumn(projectId, { ...data, worksheetId: currentWorksheet.id }) 
+        : Promise.reject('No worksheet selected'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['columns', projectId, currentWorksheet?.id] });
+    }
+  });
+
+  // Update column mutation
+  const updateColumnMutation = useMutation({
+    mutationFn: ({ columnId, updates }: { columnId: string, updates: Partial<KanbanColumn> }) => 
+      kanbanService.updateColumn(projectId, columnId, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['columns', projectId, currentWorksheet?.id] });
+    }
+  });
+
+  // Delete column mutation
+  const deleteColumnMutation = useMutation({
+    mutationFn: (columnId: string) => kanbanService.deleteColumn(projectId, columnId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['columns', projectId, currentWorksheet?.id] });
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId, currentWorksheet?.id] });
+    }
+  });
+
+  // Create task mutation
+  const createTaskMutation = useMutation({
+    mutationFn: (data: Omit<KanbanTask, 'id' | 'createdAt' | 'projectId' | 'worksheetId' | 'comments' | 'attachments'>) => 
+      currentWorksheet 
+        ? kanbanService.createTask(projectId, { ...data, worksheetId: currentWorksheet.id }) 
+        : Promise.reject('No worksheet selected'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId, currentWorksheet?.id] });
+    }
+  });
+
+  // Update task mutation
+  const updateTaskMutation = useMutation({
+    mutationFn: ({ taskId, updates }: { taskId: string, updates: Partial<KanbanTask> }) => 
+      kanbanService.updateTask(projectId, taskId, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId, currentWorksheet?.id] });
+    }
+  });
+
+  // Delete task mutation
+  const deleteTaskMutation = useMutation({
+    mutationFn: (taskId: string) => kanbanService.deleteTask(projectId, taskId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId, currentWorksheet?.id] });
+    }
+  });
+
+  // Add comment mutation
+  const addCommentMutation = useMutation({
+    mutationFn: ({ 
+      taskId, 
+      content, 
+      authorId, 
+      authorName 
+    }: { 
+      taskId: string; 
+      content: string; 
+      authorId: string; 
+      authorName: string 
+    }) => 
+      kanbanService.addComment(projectId, taskId, { content, authorId, authorName }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId, currentWorksheet?.id] });
+    }
+  });
+
+  // Add attachment mutation
+  const addAttachmentMutation = useMutation({
+    mutationFn: ({ 
+      taskId, 
+      name, 
+      url, 
+      type, 
+      size 
+    }: { 
+      taskId: string; 
+      name: string; 
+      url: string; 
+      type: string; 
+      size: number 
+    }) => 
+      kanbanService.addAttachment(projectId, taskId, { name, url, type, size }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId, currentWorksheet?.id] });
+    }
+  });
 
   // Create a new worksheet
   const createWorksheet = useCallback((title: string, description?: string) => {
-    const newWorksheet: KanbanWorksheet = {
-      id: `ws-${Date.now()}`,
-      title,
-      description,
-      projectId,
-      createdAt: new Date()
-    };
-    
-    setWorksheets(prev => [...prev, newWorksheet]);
-    setCurrentWorksheet(newWorksheet);
-
-    // Create default columns for the new worksheet
-    const newColumns = DEFAULT_COLUMNS.map((col, index) => ({
-      id: `col-${Date.now()}-${index}`,
-      title: col.title,
-      status: col.status,
-      color: col.color,
-      order: index,
-      worksheetId: newWorksheet.id
-    }));
-
-    setColumns(prev => [...prev, ...newColumns]);
-    
-    toast.success('Worksheet created');
-    return newWorksheet;
-  }, [projectId]);
-
-  // Get columns for current worksheet
-  const getCurrentWorksheetColumns = useCallback(() => {
-    if (!currentWorksheet) return [];
-    
-    // If no columns exist for this worksheet, create default ones
-    const worksheetColumns = columns.filter(col => col.worksheetId === currentWorksheet.id);
-    
-    if (worksheetColumns.length === 0 && currentWorksheet) {
-      const defaultColumns = DEFAULT_COLUMNS.map((col, index) => ({
-        id: `col-${Date.now()}-${index}`,
-        title: col.title,
-        status: col.status,
-        color: col.color,
-        order: index,
-        worksheetId: currentWorksheet.id
-      }));
-      
-      setColumns(prev => [...prev, ...defaultColumns]);
-      return defaultColumns;
-    }
-    
-    return worksheetColumns.sort((a, b) => a.order - b.order);
-  }, [columns, currentWorksheet]);
+    createWorksheetMutation.mutate({ title, description });
+  }, [createWorksheetMutation]);
 
   // Create a new column
   const createColumn = useCallback((title: string, color: string = 'bg-slate-100') => {
-    if (!currentWorksheet) return null;
-    
-    const worksheetColumns = getCurrentWorksheetColumns();
-    const newOrder = worksheetColumns.length;
-    
-    const newColumn: KanbanColumn = {
-      id: `col-${Date.now()}`,
-      title,
-      status: title.toLowerCase().replace(/\s+/g, '-'),
-      color,
-      order: newOrder,
-      worksheetId: currentWorksheet.id
-    };
-    
-    setColumns(prev => [...prev, newColumn]);
-    toast.success('Column created');
-    return newColumn;
-  }, [currentWorksheet, getCurrentWorksheetColumns]);
+    createColumnMutation.mutate({ title, color });
+  }, [createColumnMutation]);
 
   // Update a column
   const updateColumn = useCallback((columnId: string, updates: Partial<KanbanColumn>) => {
-    setColumns(prev => prev.map(column => 
-      column.id === columnId 
-        ? { ...column, ...updates } 
-        : column
-    ));
-    toast.success('Column updated');
-  }, []);
+    updateColumnMutation.mutate({ columnId, updates });
+  }, [updateColumnMutation]);
 
   // Delete a column
   const deleteColumn = useCallback((columnId: string) => {
-    const columnToDelete = columns.find(col => col.id === columnId);
-    if (!columnToDelete) return;
-    
-    // Move tasks in this column to the first column or create a "Backlog" column
-    const worksheetColumns = columns.filter(col => col.worksheetId === columnToDelete.worksheetId);
-    let targetColumn: KanbanColumn | undefined;
-    
-    if (worksheetColumns.length > 1) {
-      // Find the first column that's not the one being deleted
-      targetColumn = worksheetColumns.find(col => col.id !== columnId);
-    } else {
-      // Create a new "Backlog" column
-      const backlogColumn: KanbanColumn = {
-        id: `col-${Date.now()}`,
-        title: 'Backlog',
-        status: 'backlog',
-        color: 'bg-slate-100',
-        order: 0,
-        worksheetId: columnToDelete.worksheetId
-      };
-      
-      setColumns(prev => [...prev, backlogColumn]);
-      targetColumn = backlogColumn;
-    }
-    
-    if (targetColumn) {
-      // Move tasks to the target column
-      setTasks(prev => prev.map(task => 
-        task.status === columnToDelete.status 
-          ? { ...task, status: targetColumn!.status } 
-          : task
-      ));
-    }
-    
-    // Remove the column
-    setColumns(prev => prev.filter(col => col.id !== columnId));
-    
-    // Reorder remaining columns
-    const remainingColumns = columns.filter(col => 
-      col.worksheetId === columnToDelete.worksheetId && col.id !== columnId
-    );
-    
-    if (remainingColumns.length > 0) {
-      const reorderedColumns = remainingColumns.map((col, index) => ({
-        ...col,
-        order: index
-      }));
-      
-      setColumns(prev => 
-        prev.filter(col => col.worksheetId !== columnToDelete.worksheetId)
-          .concat(reorderedColumns)
-      );
-    }
-    
-    toast.success('Column deleted');
-  }, [columns]);
-
-  // Reorder columns
-  const reorderColumns = useCallback((columnId: string, newOrder: number) => {
-    const columnToMove = columns.find(col => col.id === columnId);
-    if (!columnToMove) return;
-    
-    const worksheetColumns = columns.filter(col => col.worksheetId === columnToMove.worksheetId)
-      .sort((a, b) => a.order - b.order);
-    
-    const updatedColumns = [...worksheetColumns];
-    const oldIndex = updatedColumns.findIndex(col => col.id === columnId);
-    
-    if (oldIndex === -1) return;
-    
-    // Remove the column from its old position
-    const [removed] = updatedColumns.splice(oldIndex, 1);
-    // Insert it at the new position
-    updatedColumns.splice(newOrder, 0, removed);
-    
-    // Update the order of all columns
-    const reorderedColumns = updatedColumns.map((col, index) => ({
-      ...col,
-      order: index
-    }));
-    
-    setColumns(prev => 
-      prev.filter(col => col.worksheetId !== columnToMove.worksheetId)
-        .concat(reorderedColumns)
-    );
-  }, [columns]);
+    deleteColumnMutation.mutate(columnId);
+  }, [deleteColumnMutation]);
 
   // Create a new task
   const createTask = useCallback((data: Omit<KanbanTask, 'id' | 'createdAt' | 'projectId' | 'worksheetId'>) => {
-    if (!currentWorksheet) return null;
-    
-    const newTask: KanbanTask = {
-      id: `task-${Date.now()}`,
-      ...data,
-      projectId,
-      worksheetId: currentWorksheet.id,
-      createdAt: new Date(),
-      comments: [],
-      attachments: []
-    };
-    
-    setTasks(prev => [...prev, newTask]);
-    toast.success('Task created');
-    return newTask;
-  }, [projectId, currentWorksheet]);
+    createTaskMutation.mutate(data);
+  }, [createTaskMutation]);
 
   // Update a task
   const updateTask = useCallback((taskId: string, updates: Partial<KanbanTask>) => {
-    setTasks(prev => prev.map(task => 
-      task.id === taskId 
-        ? { ...task, ...updates } 
-        : task
-    ));
-    toast.success('Task updated');
-  }, []);
+    updateTaskMutation.mutate({ taskId, updates });
+  }, [updateTaskMutation]);
 
   // Delete a task
   const deleteTask = useCallback((taskId: string) => {
-    setTasks(prev => prev.filter(task => task.id !== taskId));
-    toast.success('Task deleted');
-  }, []);
+    deleteTaskMutation.mutate(taskId);
+  }, [deleteTaskMutation]);
 
   // Move a task to a different status
   const moveTask = useCallback((taskId: string, newStatus: KanbanStatus) => {
-    setTasks(prev => prev.map(task => 
-      task.id === taskId 
-        ? { ...task, status: newStatus } 
-        : task
-    ));
-  }, []);
+    updateTaskMutation.mutate({ taskId, updates: { status: newStatus } });
+  }, [updateTaskMutation]);
 
   // Add a comment to a task
   const addComment = useCallback((taskId: string, content: string, authorId: string, authorName: string) => {
-    const newComment = {
-      id: `comment-${Date.now()}`,
-      content,
-      authorId,
-      authorName,
-      createdAt: new Date(),
-      taskId,
-      replies: []
-    };
-    
-    setTasks(prev => prev.map(task => 
-      task.id === taskId 
-        ? { 
-            ...task, 
-            comments: task.comments ? [...task.comments, newComment] : [newComment] 
-          } 
-        : task
-    ));
-    
-    toast.success('Comment added');
-    return newComment;
-  }, []);
-
-  // Add a reply to a comment
-  const addReply = useCallback((taskId: string, commentId: string, content: string, authorId: string, authorName: string) => {
-    const newReply = {
-      id: `reply-${Date.now()}`,
-      content,
-      authorId,
-      authorName,
-      createdAt: new Date(),
-      taskId
-    };
-    
-    setTasks(prev => prev.map(task => {
-      if (task.id !== taskId || !task.comments) return task;
-      
-      return {
-        ...task,
-        comments: task.comments.map(comment => 
-          comment.id === commentId
-            ? { 
-                ...comment, 
-                replies: comment.replies ? [...comment.replies, newReply] : [newReply] 
-              }
-            : comment
-        )
-      };
-    }));
-    
-    toast.success('Reply added');
-    return newReply;
-  }, []);
+    addCommentMutation.mutate({ taskId, content, authorId, authorName });
+  }, [addCommentMutation]);
 
   // Add attachment to a task
   const addAttachment = useCallback((taskId: string, name: string, url: string, type: string, size: number) => {
-    const newAttachment = {
-      id: `attachment-${Date.now()}`,
-      name,
-      url,
-      type,
-      size,
-      taskId,
-      createdAt: new Date()
-    };
-    
-    setTasks(prev => prev.map(task => 
-      task.id === taskId 
-        ? { 
-            ...task, 
-            attachments: task.attachments ? [...task.attachments, newAttachment] : [newAttachment] 
-          } 
-        : task
-    ));
-    
-    toast.success('Attachment added');
-    return newAttachment;
-  }, []);
+    addAttachmentMutation.mutate({ taskId, name, url, type, size });
+  }, [addAttachmentMutation]);
 
-  // Get tasks for current worksheet
-  const getCurrentWorksheetTasks = useCallback(() => {
-    if (!currentWorksheet) return [];
-    return tasks.filter(task => task.worksheetId === currentWorksheet.id);
-  }, [tasks, currentWorksheet]);
-
-  // Group tasks by status
+  // Group tasks by status for display
   const getTasksByStatus = useCallback(() => {
-    const currentTasks = getCurrentWorksheetTasks();
-    const worksheetColumns = getCurrentWorksheetColumns();
-    
     const tasksByStatus: Record<string, KanbanTask[]> = {};
     
-    worksheetColumns.forEach(column => {
-      tasksByStatus[column.status] = currentTasks.filter(task => task.status === column.status);
+    columns.forEach(column => {
+      tasksByStatus[column.status] = tasks.filter(task => task.status === column.status);
     });
     
     return tasksByStatus;
-  }, [getCurrentWorksheetTasks, getCurrentWorksheetColumns]);
+  }, [tasks, columns]);
+
+  const loading = isLoadingWorksheets || isLoadingColumns || isLoadingTasks;
 
   return {
     worksheets,
     currentWorksheet,
     setCurrentWorksheet,
     tasks,
-    columns: getCurrentWorksheetColumns(),
+    columns,
     loading,
     createWorksheet,
     createColumn,
     updateColumn,
     deleteColumn,
-    reorderColumns,
     createTask,
     updateTask, 
     deleteTask,
     moveTask,
     addComment,
-    addReply,
     addAttachment,
-    getCurrentWorksheetTasks,
     getTasksByStatus
   };
 }

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import KanbanColumn from './KanbanColumn';
 import { KanbanTask, KanbanStatus, KanbanWorksheet, KanbanColumn as KanbanColumnType } from '@/types/kanban';
@@ -103,6 +102,19 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
   
   const boardRef = useRef<HTMLDivElement>(null);
   
+  const closeCreateColumnModal = () => {
+    setIsCreateColumnOpen(false);
+    setNewColumn({
+      title: '',
+      color: 'bg-slate-100'
+    });
+  };
+  
+  const closeEditTaskModal = () => {
+    setIsEditTaskOpen(false);
+    setSelectedTask(null);
+  };
+  
   const handleCreateTask = () => {
     if (!newTask.title.trim()) {
       toast.error("Task title is required");
@@ -160,7 +172,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
       color: 'bg-slate-100'
     });
     
-    setIsCreateColumnOpen(false);
+    closeCreateColumnModal();
   };
   
   const handleTaskClick = (task: KanbanTask) => {
@@ -179,7 +191,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
     if (!selectedTask) return;
     
     deleteTask(selectedTask.id);
-    setIsEditTaskOpen(false);
+    closeEditTaskModal();
   };
   
   const handleDrop = (task: KanbanTask, newStatus: KanbanStatus) => {
@@ -301,7 +313,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
       
       {/* Kanban board */}
       <div className="relative">
-        <ScrollArea className="h-[calc(100vh-250px)]" orientation="horizontal">
+        <ScrollArea className="h-[calc(100vh-250px)]">
           <div 
             ref={boardRef}
             className="flex space-x-4 pb-4 pr-16"
@@ -372,7 +384,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
                   </div>
                 </div>
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setIsCreateColumnOpen(false)}>
+                  <Button variant="outline" onClick={closeCreateColumnModal}>
                     Cancel
                   </Button>
                   <Button onClick={handleCreateColumn}>
@@ -470,7 +482,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
       
       {/* Edit Task Dialog */}
       {selectedTask && (
-        <Dialog open={isEditTaskOpen} onOpenChange={setIsEditTaskOpen}>
+        <Dialog open={isEditTaskOpen} onOpenChange={closeEditTaskModal}>
           <DialogContent className="max-w-xl">
             <DialogHeader>
               <DialogTitle>Task Details</DialogTitle>
