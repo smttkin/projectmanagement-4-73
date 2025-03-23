@@ -102,7 +102,7 @@ export const BoardContainer: React.FC<BoardContainerProps> = ({
   };
   
   return (
-    <div className="relative flex-1 mt-4">
+    <div className="relative flex-1 mt-4 h-full">
       <div className="h-[calc(100vh-170px)] overflow-hidden flex flex-col" ref={scrollContainerRef}>
         <BoardScrollControls 
           currentScrollIndex={currentScrollIndex}
@@ -112,7 +112,7 @@ export const BoardContainer: React.FC<BoardContainerProps> = ({
           onScrollRight={scrollRight}
         />
         
-        <div className="flex-grow overflow-hidden flex flex-col">
+        <div className="flex-grow overflow-hidden flex flex-col h-full">
           <BoardScrollArea 
             columns={columns}
             boardRef={boardRef}

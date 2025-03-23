@@ -49,14 +49,14 @@ export const BoardScrollArea: React.FC<BoardScrollAreaProps> = ({
   return (
     <div 
       ref={boardRef}
-      className="flex space-x-2 pb-6 pr-4 overflow-x-auto kanban-scroll"
+      className="flex space-x-2 pb-6 pr-4 overflow-x-auto kanban-scroll h-full"
       style={{ minWidth: '100%', scrollSnapType: 'x mandatory' }}
       onWheel={handleWheelScroll}
     >
       {columns.map((column) => (
         <div 
           key={column.id} 
-          className="transition-all duration-200 scroll-snap-align-start"
+          className="transition-all duration-200 scroll-snap-align-start h-full"
           style={{ 
             width: `${columnWidth}px`,
             minWidth: `${columnWidth}px`,
