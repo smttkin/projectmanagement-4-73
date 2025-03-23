@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -23,6 +23,7 @@ import { useAuth } from '@/context/AuthContext';
 const Navbar: React.FC = () => {
   const location = useLocation();
   const { isAuthenticated, user, logout } = useAuth();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -121,7 +122,15 @@ const Navbar: React.FC = () => {
         <div className="flex items-center ml-auto space-x-2">
           {isAuthenticated ? (
             <>
-              <SearchModal />
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="h-9 w-9"
+                onClick={() => setIsSearchOpen(true)}
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
+              <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
               <NotificationsPopover />
               <HelpPopover />
               <ModeToggle />
