@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { KanbanTask as KanbanTaskType } from '@/types/kanban';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface KanbanTaskProps {
   task: KanbanTaskType;
@@ -103,17 +108,31 @@ const KanbanTaskComponent: React.FC<KanbanTaskProps> = ({
         {/* Task activity indicators */}
         <div className="flex items-center justify-start gap-3 mt-2 text-xs text-muted-foreground">
           {commentCount > 0 && (
-            <div className="flex items-center">
-              <MessageSquare className="h-3 w-3 mr-1" />
-              <span>{commentCount}</span>
-            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center">
+                  <MessageSquare className="h-3 w-3 mr-1" />
+                  <span>{commentCount}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {commentCount} comment{commentCount !== 1 ? 's' : ''}
+              </TooltipContent>
+            </Tooltip>
           )}
           
           {attachmentCount > 0 && (
-            <div className="flex items-center">
-              <Paperclip className="h-3 w-3 mr-1" />
-              <span>{attachmentCount}</span>
-            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center">
+                  <Paperclip className="h-3 w-3 mr-1" />
+                  <span>{attachmentCount}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {attachmentCount} attachment{attachmentCount !== 1 ? 's' : ''}
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
       </CardContent>
