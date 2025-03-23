@@ -84,29 +84,68 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     }
   };
   
-  // Apply different background colors based on column type and theme
+  // Enhanced theme-reactive column styles with better visual treatment
   const getColumnStyles = () => {
-    // Default color classes 
+    // Base styles common to all columns
     const baseClasses = "flex flex-col h-full min-w-[280px] rounded-md border";
     
+    // If column has a custom color class, use it
     if (column.color) {
       return cn(baseClasses, column.color);
     }
     
-    // Apply theme-reactive colors based on column status
+    // Apply theme-reactive styles based on column status
     switch (column.status) {
       case 'todo':
-        return cn(baseClasses, "bg-card border-border");
+        return cn(
+          baseClasses,
+          "bg-card border-border dark:bg-card/80 dark:border-slate-700/50"
+        );
       case 'in-progress':
-        return cn(baseClasses, "bg-card border-primary/30");
+        return cn(
+          baseClasses,
+          "bg-card border-primary/30 dark:bg-slate-800/60 dark:border-primary/40"
+        );
       case 'in-review':
-        return cn(baseClasses, "bg-card border-orange-500/30");
+        return cn(
+          baseClasses,
+          "bg-card border-orange-500/30 dark:bg-amber-950/20 dark:border-orange-400/30"
+        );
       case 'done':
-        return cn(baseClasses, "bg-card border-green-500/30");
+        return cn(
+          baseClasses,
+          "bg-card border-green-500/30 dark:bg-green-950/20 dark:border-green-400/30"
+        );
       case 'blocked':
-        return cn(baseClasses, "bg-card border-destructive/30");
+        return cn(
+          baseClasses,
+          "bg-card border-destructive/30 dark:bg-red-950/20 dark:border-red-400/30"
+        );
       default:
-        return cn(baseClasses, "bg-card border-border");
+        return cn(
+          baseClasses,
+          "bg-card border-border dark:bg-card/80 dark:border-slate-700/50"
+        );
+    }
+  };
+  
+  // Get header style based on column status
+  const getHeaderStyles = () => {
+    const baseClasses = "p-2 border-b border-border bg-opacity-50 flex items-center justify-between";
+    
+    switch (column.status) {
+      case 'todo':
+        return cn(baseClasses, "dark:border-slate-700/50");
+      case 'in-progress':
+        return cn(baseClasses, "dark:border-primary/30");
+      case 'in-review':
+        return cn(baseClasses, "dark:border-orange-400/30");
+      case 'done':
+        return cn(baseClasses, "dark:border-green-400/30");
+      case 'blocked':
+        return cn(baseClasses, "dark:border-red-400/30");
+      default:
+        return cn(baseClasses, "dark:border-slate-700/50");
     }
   };
   
@@ -116,7 +155,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <div className="p-2 border-b border-border bg-opacity-50 flex items-center justify-between">
+      <div className={getHeaderStyles()}>
         {isEditing ? (
           <Input
             value={columnTitle}
