@@ -1,49 +1,13 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import KanbanColumn from './KanbanColumn';
+import React, { useState } from 'react';
 import { KanbanTask, KanbanStatus, KanbanWorksheet } from '@/types/kanban';
-import { Button } from '@/components/ui/button';
-import { Plus, Layout, MoreHorizontal, X, Trash2, MessageSquare, Paperclip, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useKanban } from '@/hooks/useKanban';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { format } from 'date-fns';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-  DialogDescription
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
-import { toast } from 'sonner';
 import { KanbanBoardHeader } from './KanbanBoardHeader';
-import { AddColumnButton } from './AddColumnButton';
+import { BoardContainer } from './BoardContainer';
 import { CreateTaskDialog } from './dialogs/CreateTaskDialog';
-import { TaskDetailsDialog } from './dialogs/TaskDetailsDialog';
 import { CreateWorksheetDialog } from './dialogs/CreateWorksheetDialog';
+import { TaskDetailsDialog } from './dialogs/TaskDetailsDialog';
+import { toast } from 'sonner';
 
 interface KanbanBoardProps {
   projectId: string;
@@ -102,70 +66,6 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
     type: 'link',
     size: 0
   });
-  
-  const boardRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  
-  const [columnWidth, setColumnWidth] = useState(0);
-  const [containerWidth, setContainerWidth] = useState(0);
-  const [currentScrollIndex, setCurrentScrollIndex] = useState(0);
-  const [columnsPerView, setColumnsPerView] = useState(3);
-  
-  useEffect(() => {
-    const updateWidths = () => {
-      if (scrollContainerRef.current) {
-        const container = scrollContainerRef.current;
-        const containerWidth = container.offsetWidth;
-        setContainerWidth(containerWidth);
-        
-        // Calculate how many columns can fit in the view
-        const calculatedColumnsPerView = Math.floor(containerWidth / 320) || 3;
-        setColumnsPerView(calculatedColumnsPerView);
-        
-        // Set column width based on the container width and columns per view
-        const colWidth = (containerWidth - 24) / columnsPerView;
-        setColumnWidth(colWidth);
-      }
-    };
-    
-    updateWidths();
-    window.addEventListener('resize', updateWidths);
-    
-    return () => {
-      window.removeEventListener('resize', updateWidths);
-    };
-  }, []);
-  
-  const handleWheelScroll = (e: React.WheelEvent) => {
-    if (Math.abs(e.deltaX) < Math.abs(e.deltaY) && e.deltaY !== 0) {
-      // If vertical scrolling is more prominent, convert it to horizontal
-      if (boardRef.current) {
-        e.preventDefault();
-        boardRef.current.scrollLeft += e.deltaY;
-      }
-    }
-  };
-
-  const scrollToColumn = (index: number) => {
-    if (boardRef.current && index >= 0 && index < columns.length) {
-      setCurrentScrollIndex(index);
-      const scrollPosition = index * columnWidth;
-      boardRef.current.scrollTo({
-        left: scrollPosition,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  const scrollLeft = () => {
-    const newIndex = Math.max(0, currentScrollIndex - columnsPerView);
-    scrollToColumn(newIndex);
-  };
-
-  const scrollRight = () => {
-    const newIndex = Math.min(columns.length - 1, currentScrollIndex + columnsPerView);
-    scrollToColumn(newIndex);
-  };
   
   const closeCreateColumnModal = () => {
     setIsCreateColumnOpen(false);
@@ -307,85 +207,25 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
         onCreateWorksheetClick={() => setIsCreateWorksheetOpen(true)}
       />
       
-      <div className="relative flex-1 mt-4">
-        <div className="h-[calc(100vh-250px)] overflow-hidden" ref={scrollContainerRef}>
-          <div className="flex justify-between mb-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={scrollLeft} 
-              disabled={currentScrollIndex === 0}
-              className="flex items-center gap-1"
-            >
-              <ChevronLeft size={16} />
-              Previous
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={scrollRight} 
-              disabled={currentScrollIndex >= columns.length - columnsPerView}
-              className="flex items-center gap-1"
-            >
-              Next
-              <ChevronRight size={16} />
-            </Button>
-          </div>
-          
-          <div 
-            ref={boardRef}
-            className="flex space-x-2 pb-6 pr-4 overflow-x-auto kanban-scroll"
-            style={{ minWidth: '100%', scrollSnapType: 'x mandatory' }}
-            onWheel={handleWheelScroll}
-          >
-            {columns.map((column, index) => (
-              <div 
-                key={column.id} 
-                className={cn(
-                  "transition-all duration-200 scroll-snap-align-start",
-                  index >= columnsPerView ? "opacity-50" : ""
-                )}
-                style={{ 
-                  width: `${columnWidth}px`,
-                  minWidth: `${columnWidth}px`,
-                  position: 'relative',
-                  scrollSnapAlign: 'start'
-                }}
-              >
-                <KanbanColumn
-                  column={column}
-                  tasks={tasksByStatus[column.status] || []}
-                  onAddTask={(status) => {
-                    setSelectedTaskStatus(status);
-                    setIsCreateTaskOpen(true);
-                  }}
-                  onTaskClick={handleTaskClick}
-                  onDrop={handleDrop}
-                  onUpdateColumn={updateColumn}
-                  onDeleteColumn={deleteColumn}
-                  onEditTask={handleTaskClick}
-                  onDeleteTask={deleteTask}
-                />
-                
-                {index === columnsPerView && (
-                  <div className="absolute inset-0 bg-background/80 backdrop-blur-sm pointer-events-none" />
-                )}
-              </div>
-            ))}
-            
-            <div style={{ width: `${columnWidth}px`, minWidth: `${columnWidth}px` }}>
-              <AddColumnButton 
-                isOpen={isCreateColumnOpen}
-                setIsOpen={setIsCreateColumnOpen}
-                columnData={newColumn}
-                setColumnData={setNewColumn}
-                onClose={closeCreateColumnModal}
-                onSubmit={handleCreateColumn}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+      <BoardContainer
+        columns={columns}
+        tasksByStatus={tasksByStatus}
+        onAddTask={(status) => {
+          setSelectedTaskStatus(status);
+          setIsCreateTaskOpen(true);
+        }}
+        onTaskClick={handleTaskClick}
+        onDrop={handleDrop}
+        onUpdateColumn={updateColumn}
+        onDeleteColumn={deleteColumn}
+        onDeleteTask={deleteTask}
+        isCreateColumnOpen={isCreateColumnOpen}
+        setIsCreateColumnOpen={setIsCreateColumnOpen}
+        newColumn={newColumn}
+        setNewColumn={setNewColumn}
+        closeCreateColumnModal={closeCreateColumnModal}
+        handleCreateColumn={handleCreateColumn}
+      />
       
       <CreateTaskDialog 
         isOpen={isCreateTaskOpen}
