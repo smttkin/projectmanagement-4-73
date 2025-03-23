@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { 
   Card, 
@@ -46,8 +45,54 @@ interface TableDefinition {
   fields: TableField[];
 }
 
+// Department definitions
+const departmentDefinitions = [
+  {
+    name: 'Engineering',
+    description: 'Responsible for software development, infrastructure, and technical implementation.',
+    roles: ['Frontend Developer', 'Backend Developer', 'DevOps Engineer', 'Mobile Developer', 'Tech Lead']
+  },
+  {
+    name: 'Design',
+    description: 'Creates user interfaces, user experiences, and visual assets for products.',
+    roles: ['UX Designer', 'UI Designer', 'Graphic Designer', 'Product Designer', 'Design Lead']
+  },
+  {
+    name: 'Product',
+    description: 'Defines product strategy, requirements, and roadmaps.',
+    roles: ['Product Manager', 'Product Owner', 'Business Analyst', 'Product Strategist']
+  },
+  {
+    name: 'Quality Assurance',
+    description: 'Ensures software quality through testing and quality control processes.',
+    roles: ['QA Engineer', 'Test Automation Engineer', 'QA Lead', 'Quality Analyst']
+  },
+  {
+    name: 'Marketing',
+    description: 'Develops and executes marketing strategies to promote products.',
+    roles: ['Marketing Specialist', 'Content Writer', 'SEO Specialist', 'Social Media Manager']
+  }
+];
+
 const DatabaseSchema = () => {
   const [activeTab, setActiveTab] = useState('schema');
+  const [departments, setDepartments] = useState(departmentDefinitions);
+  
+  // Fetch department definitions if needed
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const deptDefs = await teamService.getDepartmentDefinitions();
+        if (deptDefs && deptDefs.length > 0) {
+          setDepartments(deptDefs);
+        }
+      } catch (error) {
+        console.error("Error fetching department definitions:", error);
+      }
+    };
+    
+    fetchDepartments();
+  }, []);
   
   const tables: TableDefinition[] = [
     {
@@ -387,7 +432,7 @@ const DatabaseSchema = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {departmentDefinitions.map((dept) => (
+                {departments.map((dept) => (
                   <Card key={dept.name} className="overflow-hidden border shadow-sm">
                     <CardHeader className="bg-muted/40 pb-3">
                       <CardTitle className="text-lg">{dept.name} Department</CardTitle>

@@ -10,6 +10,18 @@ interface User {
   email: string;
   avatar?: string;
   role: 'admin' | 'member' | 'viewer';
+  bio?: string;
+  phone?: string;
+  location?: string;
+  department?: string;
+  position?: string;
+  skills?: string[];
+  socialLinks?: {
+    twitter?: string;
+    github?: string;
+    linkedin?: string;
+    website?: string;
+  };
 }
 
 // Mock user data (in a real app, this would come from an API)
@@ -21,6 +33,18 @@ const mockUsers = [
     name: 'Admin User',
     avatar: 'https://i.pravatar.cc/150?img=68',
     role: 'admin' as const,
+    bio: 'Experienced project manager with 7+ years in software development.',
+    phone: '+1 (555) 123-4567',
+    location: 'San Francisco, CA',
+    department: 'Product',
+    position: 'Project Manager',
+    skills: ['Project Management', 'Agile', 'Team Leadership'],
+    socialLinks: {
+      twitter: 'https://twitter.com/example',
+      github: 'https://github.com/example',
+      linkedin: 'https://linkedin.com/in/example',
+      website: 'https://example.com'
+    }
   },
   {
     id: '2',
@@ -29,6 +53,16 @@ const mockUsers = [
     name: 'Team Member',
     avatar: 'https://i.pravatar.cc/150?img=32',
     role: 'member' as const,
+    bio: 'Frontend developer with a passion for UI/UX',
+    phone: '+1 (555) 987-6543',
+    location: 'New York, NY',
+    department: 'Engineering',
+    position: 'Frontend Developer',
+    skills: ['React', 'TypeScript', 'Tailwind CSS'],
+    socialLinks: {
+      github: 'https://github.com/teammember',
+      linkedin: 'https://linkedin.com/in/teammember'
+    }
   },
 ];
 
@@ -39,6 +73,7 @@ if (!localStorage.getItem('mockUsers')) {
 
 interface AuthContextType {
   user: User | null;
+  setUser: (user: User) => void;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
@@ -71,6 +106,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Simulate network delay
     setTimeout(checkSession, 1000);
   }, []);
+
+  // Update user in localStorage when it changes
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
@@ -173,6 +214,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value = {
     user,
+    setUser: updateUser,
     isAuthenticated: !!user,
     isLoading,
     login,
