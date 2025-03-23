@@ -1,3 +1,4 @@
+
 import { ApiService } from './api';
 import { Project } from '@/types/project';
 import { toast } from 'sonner';
@@ -34,10 +35,45 @@ class ProjectService extends ApiService {
   // Get all projects
   async getProjects(): Promise<Project[]> {
     try {
+      // Using a more reliable mock data approach
       const projects = this.getStoredProjects();
-      return this.simulateResponse(projects);
+      
+      // If projects array is empty, use fallback mock data
+      if (!projects || projects.length === 0) {
+        // Convert projectsData to Project[] format
+        const mappedProjects: Project[] = projectsData.map(p => ({
+          id: p.id,
+          title: p.title,
+          description: p.description,
+          status: p.status === 'completed' ? 'completed' : 
+                 p.status === 'in-progress' ? 'active' : 
+                 p.status === 'at-risk' ? 'on-hold' : 'cancelled',
+          priority: p.priority,
+          progress: p.progress,
+          startDate: new Date().toISOString(),
+          dueDate: p.dueDate,
+          teamMembers: p.members.map(m => ({
+            id: m.id,
+            name: m.name,
+            email: `${m.name.toLowerCase().replace(' ', '.')}@example.com`,
+            role: 'team member',
+            avatar: m.avatar
+          })),
+          tags: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }));
+        
+        // Save the mapped projects to storage
+        this.saveProjects(mappedProjects);
+        return mappedProjects;
+      }
+      
+      return await this.simulateResponse(projects, 0); // Set error chance to 0 to avoid random errors
     } catch (error) {
-      return this.handleError(error, 'Failed to fetch projects');
+      console.error("Error in getProjects:", error);
+      // Return empty array instead of throwing to avoid crashes
+      return [];
     }
   }
   
@@ -51,7 +87,7 @@ class ProjectService extends ApiService {
         throw new Error(`Project with ID ${id} not found`);
       }
       
-      return this.simulateResponse(project);
+      return this.simulateResponse(project, 0); // Set error chance to 0
     } catch (error) {
       return this.handleError(error, `Failed to fetch project ${id}`);
     }
@@ -73,7 +109,7 @@ class ProjectService extends ApiService {
       this.saveProjects([...projects, newProject]);
       
       toast.success('Project created successfully');
-      return this.simulateResponse(newProject, 0.1);
+      return this.simulateResponse(newProject, 0);
     } catch (error) {
       return this.handleError(error, 'Failed to create project');
     }
@@ -100,7 +136,7 @@ class ProjectService extends ApiService {
       this.saveProjects(projects);
       
       toast.success('Project updated successfully');
-      return this.simulateResponse(updatedProject);
+      return this.simulateResponse(updatedProject, 0);
     } catch (error) {
       return this.handleError(error, `Failed to update project ${id}`);
     }
@@ -118,7 +154,7 @@ class ProjectService extends ApiService {
       
       this.saveProjects(updatedProjects);
       
-      await this.simulateResponse(undefined);
+      await this.simulateResponse(undefined, 0);
       toast.success('Project deleted successfully');
     } catch (error) {
       this.handleError(error, `Failed to delete project ${id}`);

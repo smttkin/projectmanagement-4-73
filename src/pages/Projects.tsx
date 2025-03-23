@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Filter, LayoutGrid, List } from 'lucide-react';
@@ -60,8 +59,15 @@ const ProjectsPage = () => {
       try {
         setIsLoading(true);
         const data = await projectService.getProjects();
-        const mappedProjects = data.map(mapProjectToCardProps);
-        setProjects(mappedProjects);
+        
+        if (data && data.length > 0) {
+          const mappedProjects = data.map(mapProjectToCardProps);
+          setProjects(mappedProjects);
+        } else {
+          // If no projects were returned, show a message
+          setProjects([]);
+          toast.info("No projects available");
+        }
       } catch (error) {
         console.error('Error fetching projects:', error);
         toast.error('Failed to load projects');
@@ -77,15 +83,19 @@ const ProjectsPage = () => {
     navigate('/project/new');
   };
 
-  const handleDeleteProject = (id: string, e: React.MouseEvent) => {
+  const handleDeleteProject = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // Filter out the deleted project
-    setProjects(projects.filter(project => project.id !== id));
-    toast.success("Project deleted successfully");
-    
-    // In a real app, you would also call the API to delete the project
-    // projectService.deleteProject(id);
+    try {
+      // Call the API to delete the project
+      await projectService.deleteProject(id);
+      
+      // Filter out the deleted project
+      setProjects(projects.filter(project => project.id !== id));
+    } catch (error) {
+      // Error will be handled by the service with a toast
+      console.error('Error deleting project:', error);
+    }
   };
 
   // Filter and sort projects
