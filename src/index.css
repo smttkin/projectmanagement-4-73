@@ -51,6 +51,15 @@
     --kanban-in-review-border: 32 98% 44%;
     --kanban-done-border: 142 72% 29%;
     --kanban-blocked-border: 0 84% 60%;
+    
+    /* Custom color variables for kanban columns */
+    --kanban-slate-bg: 210 40% 96%;
+    --kanban-blue-bg: 206 100% 93%;
+    --kanban-green-bg: 142 72% 90%;
+    --kanban-amber-bg: 43 100% 90%;
+    --kanban-red-bg: 0 100% 93%;
+    --kanban-purple-bg: 270 100% 93%;
+    --kanban-pink-bg: 330 100% 93%;
   }
 
   .dark {
@@ -88,6 +97,15 @@
     --kanban-in-review-border: 32 98% 30%;
     --kanban-done-border: 142 72% 25%;
     --kanban-blocked-border: 0 63% 31%;
+    
+    /* Custom color variables for kanban columns - dark mode */
+    --kanban-slate-bg: 215 25% 20%;
+    --kanban-blue-bg: 206 100% 15%;
+    --kanban-green-bg: 142 70% 15%;
+    --kanban-amber-bg: 43 100% 15%;
+    --kanban-red-bg: 0 100% 15%;
+    --kanban-purple-bg: 270 100% 15%;
+    --kanban-pink-bg: 330 100% 15%;
   }
 }
 

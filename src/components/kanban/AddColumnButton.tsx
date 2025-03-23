@@ -20,14 +20,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Updated color options with theme-friendly choices
 const COLUMN_COLORS = [
-  { label: 'Gray', value: 'bg-slate-100' },
-  { label: 'Blue', value: 'bg-blue-100' },
-  { label: 'Green', value: 'bg-green-100' },
-  { label: 'Yellow', value: 'bg-amber-100' },
-  { label: 'Red', value: 'bg-red-100' },
-  { label: 'Purple', value: 'bg-purple-100' },
-  { label: 'Pink', value: 'bg-pink-100' },
+  { label: 'Gray', value: 'bg-slate-100 dark:bg-slate-800 dark:text-white' },
+  { label: 'Blue', value: 'bg-blue-100 dark:bg-blue-900 dark:text-white' },
+  { label: 'Green', value: 'bg-green-100 dark:bg-green-900 dark:text-white' },
+  { label: 'Yellow', value: 'bg-amber-100 dark:bg-amber-900 dark:text-white' },
+  { label: 'Red', value: 'bg-red-100 dark:bg-red-900 dark:text-white' },
+  { label: 'Purple', value: 'bg-purple-100 dark:bg-purple-900 dark:text-white' },
+  { label: 'Pink', value: 'bg-pink-100 dark:bg-pink-900 dark:text-white' },
 ];
 
 interface AddColumnButtonProps {
@@ -50,6 +51,13 @@ export const AddColumnButton: React.FC<AddColumnButtonProps> = ({
   onClose,
   onSubmit
 }) => {
+  // Function to get preview color class that works in both modes
+  const getColorPreviewClass = (colorValue: string) => {
+    // Extract just the light mode part for the preview
+    const lightModeClass = colorValue.split(' ')[0];
+    return `w-4 h-4 rounded ${lightModeClass} mr-2`;
+  };
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -88,7 +96,7 @@ export const AddColumnButton: React.FC<AddColumnButtonProps> = ({
                   {COLUMN_COLORS.map(color => (
                     <SelectItem key={color.value} value={color.value}>
                       <div className="flex items-center">
-                        <div className={`w-4 h-4 rounded ${color.value} mr-2`} />
+                        <div className={getColorPreviewClass(color.value)} />
                         {color.label}
                       </div>
                     </SelectItem>

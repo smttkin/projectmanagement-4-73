@@ -84,14 +84,29 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     }
   };
   
-  // Enhanced theme-reactive column styles with better visual treatment
+  // Enhanced theme-reactive column styles with user color preservation
   const getColumnStyles = () => {
     // Base styles common to all columns
     const baseClasses = "flex flex-col h-full min-w-[280px] rounded-md border";
     
-    // If column has a custom color class, use it
+    // If column has a custom color class, use it but ensure text is visible
     if (column.color) {
-      return cn(baseClasses, column.color);
+      // These color classes map to light-mode colors, we'll add dark mode handling
+      const colorMap = {
+        'bg-slate-100': 'dark:bg-slate-800 dark:text-white',
+        'bg-blue-100': 'dark:bg-blue-900 dark:text-white',
+        'bg-green-100': 'dark:bg-green-900 dark:text-white',
+        'bg-amber-100': 'dark:bg-amber-900 dark:text-white',
+        'bg-red-100': 'dark:bg-red-900 dark:text-white',
+        'bg-purple-100': 'dark:bg-purple-900 dark:text-white',
+        'bg-pink-100': 'dark:bg-pink-900 dark:text-white',
+      };
+      
+      // Find the matching dark mode class or use a default
+      const darkModeClass = (Object.entries(colorMap).find(([key]) => 
+        column.color.includes(key))?.[1]) || 'dark:bg-slate-800 dark:text-white';
+      
+      return cn(baseClasses, column.color, darkModeClass);
     }
     
     // Apply theme-reactive styles based on column status
@@ -99,54 +114,71 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       case 'todo':
         return cn(
           baseClasses,
-          "bg-card border-border dark:bg-card/80 dark:border-slate-700/50"
+          "bg-card border-border dark:bg-card/80 dark:border-slate-700/50 dark:text-foreground"
         );
       case 'in-progress':
         return cn(
           baseClasses,
-          "bg-card border-primary/30 dark:bg-slate-800/60 dark:border-primary/40"
+          "bg-card border-primary/30 dark:bg-slate-800/60 dark:border-primary/40 dark:text-foreground"
         );
       case 'in-review':
         return cn(
           baseClasses,
-          "bg-card border-orange-500/30 dark:bg-amber-950/20 dark:border-orange-400/30"
+          "bg-card border-orange-500/30 dark:bg-amber-950/20 dark:border-orange-400/30 dark:text-foreground"
         );
       case 'done':
         return cn(
           baseClasses,
-          "bg-card border-green-500/30 dark:bg-green-950/20 dark:border-green-400/30"
+          "bg-card border-green-500/30 dark:bg-green-950/20 dark:border-green-400/30 dark:text-foreground"
         );
       case 'blocked':
         return cn(
           baseClasses,
-          "bg-card border-destructive/30 dark:bg-red-950/20 dark:border-red-400/30"
+          "bg-card border-destructive/30 dark:bg-red-950/20 dark:border-red-400/30 dark:text-foreground"
         );
       default:
         return cn(
           baseClasses,
-          "bg-card border-border dark:bg-card/80 dark:border-slate-700/50"
+          "bg-card border-border dark:bg-card/80 dark:border-slate-700/50 dark:text-foreground"
         );
     }
   };
   
   // Get header style based on column status
   const getHeaderStyles = () => {
-    const baseClasses = "p-2 border-b border-border bg-opacity-50 flex items-center justify-between";
+    const baseClasses = "p-2 border-b bg-opacity-50 flex items-center justify-between";
+    
+    if (column.color) {
+      // Extract color family name for consistent theming
+      const colorFamily = column.color.split('-')[1]; // e.g., "slate", "blue", etc.
+      return cn(baseClasses, `border-${colorFamily}-200 dark:border-${colorFamily}-800`);
+    }
     
     switch (column.status) {
       case 'todo':
-        return cn(baseClasses, "dark:border-slate-700/50");
+        return cn(baseClasses, "border-border dark:border-slate-700/50");
       case 'in-progress':
-        return cn(baseClasses, "dark:border-primary/30");
+        return cn(baseClasses, "border-primary/30 dark:border-primary/30");
       case 'in-review':
-        return cn(baseClasses, "dark:border-orange-400/30");
+        return cn(baseClasses, "border-orange-500/30 dark:border-orange-400/30");
       case 'done':
-        return cn(baseClasses, "dark:border-green-400/30");
+        return cn(baseClasses, "border-green-500/30 dark:border-green-400/30");
       case 'blocked':
-        return cn(baseClasses, "dark:border-red-400/30");
+        return cn(baseClasses, "border-destructive/30 dark:border-red-400/30");
       default:
-        return cn(baseClasses, "dark:border-slate-700/50");
+        return cn(baseClasses, "border-border dark:border-slate-700/50");
     }
+  };
+  
+  // Get task count badge style
+  const getTaskCountBadgeStyle = () => {
+    // Default style that works in both light and dark modes
+    return "text-xs text-foreground bg-background/70 dark:bg-background/30 px-1.5 py-0.5 rounded mr-1";
+  };
+  
+  // Get add task button style
+  const getAddTaskButtonStyle = () => {
+    return "w-full justify-start text-xs h-8 hover:bg-primary/10 dark:hover:bg-primary/10 text-foreground dark:text-foreground";
   };
   
   return (
@@ -167,9 +199,9 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
           />
         ) : (
           <div className="flex items-center justify-between w-full">
-            <h3 className="font-medium text-sm">{column.title}</h3>
+            <h3 className="font-medium text-sm text-foreground dark:text-foreground">{column.title}</h3>
             <div className="flex items-center">
-              <span className="text-xs text-muted-foreground bg-background/70 dark:bg-background/30 px-1.5 py-0.5 rounded mr-1">
+              <span className={getTaskCountBadgeStyle()}>
                 {tasks.length}
               </span>
               
@@ -216,7 +248,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
         <Button 
           variant="ghost" 
           size="sm" 
-          className="w-full justify-start text-xs h-8 hover:bg-primary/10"
+          className={getAddTaskButtonStyle()}
           onClick={() => onAddTask?.(column.status)}
         >
           <Plus className="h-3 w-3 mr-1" />
