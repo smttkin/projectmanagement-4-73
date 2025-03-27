@@ -34,6 +34,9 @@ export interface ProjectCardProps {
   }>;
   onClick?: () => void;
   onDelete?: (e: React.MouseEvent) => void;
+  className?: string;
+  createdAt?: string;
+  deadline?: string; // Adding this property for filtering by deadline
 }
 
 const statusConfig = {
@@ -59,7 +62,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   status,
   members,
   onClick,
-  onDelete
+  onDelete,
+  className
 }) => {
   const navigate = useNavigate();
   const StatusIcon = statusConfig[status].icon;
@@ -80,7 +84,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   
   return (
     <div 
-      className="bg-card border border-border rounded-xl shadow-subtle hover:shadow-card transition-all duration-300 overflow-hidden interactive cursor-pointer"
+      className={cn("bg-card border border-border rounded-xl shadow-subtle hover:shadow-card transition-all duration-300 overflow-hidden interactive cursor-pointer", className)}
       onClick={handleCardClick}
     >
       <div className="p-5">

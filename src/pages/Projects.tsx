@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Filter, LayoutGrid, List } from 'lucide-react';
@@ -22,6 +21,7 @@ import ProjectCard from '@/components/ProjectCard';
 import { projectService } from '@/services';
 import { toast } from 'sonner';
 import { ProjectCardProps } from '@/components/ProjectCard';
+import { Project, TeamMember } from '@/types/project';
 
 const ProjectsPage = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -37,7 +37,26 @@ const ProjectsPage = () => {
       try {
         setIsLoading(true);
         const data = await projectService.getProjects();
-        setProjects(data);
+        
+        // Map Project[] to ProjectCardProps[]
+        const projectCardProps: ProjectCardProps[] = data.map(project => ({
+          id: project.id,
+          title: project.title,
+          description: project.description,
+          progress: project.progress,
+          dueDate: project.dueDate,
+          priority: project.priority,
+          status: mapProjectStatus(project.status),
+          members: project.teamMembers.map((member: TeamMember) => ({
+            id: member.id,
+            name: member.name,
+            avatar: member.avatar
+          })),
+          createdAt: project.createdAt,
+          deadline: project.dueDate // Map dueDate to deadline for sorting
+        }));
+        
+        setProjects(projectCardProps);
       } catch (error) {
         console.error('Error fetching projects:', error);
         toast.error('Failed to load projects');
@@ -48,6 +67,22 @@ const ProjectsPage = () => {
 
     fetchProjects();
   }, []);
+
+  // Helper function to map Project status to ProjectCardProps status
+  const mapProjectStatus = (status: string): 'completed' | 'in-progress' | 'not-started' | 'at-risk' => {
+    switch (status) {
+      case 'completed':
+        return 'completed';
+      case 'active':
+        return 'in-progress';
+      case 'on-hold':
+        return 'not-started';
+      case 'cancelled':
+        return 'at-risk';
+      default:
+        return 'not-started';
+    }
+  };
 
   const handleCreateProject = () => {
     navigate('/project/new');
@@ -80,9 +115,9 @@ const ProjectsPage = () => {
       // Apply sorting
       switch (sortBy) {
         case 'newest':
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime();
         case 'oldest':
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          return new Date(a.createdAt || '').getTime() - new Date(b.createdAt || '').getTime();
         case 'name-asc':
           return a.title.localeCompare(b.title);
         case 'name-desc':
