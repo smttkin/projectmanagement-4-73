@@ -6,3 +6,5 @@ export * from './teamService';
 export * from './timelineService';
 export * from './databaseSchemaService';
 export * from './workspaceService';
+export * from './kanbanService';
+
