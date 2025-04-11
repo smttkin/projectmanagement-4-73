@@ -70,11 +70,11 @@ const Dashboard = () => {
           dueDate: project.dueDate,
           priority: project.priority,
           status: mapProjectStatus(project.status),
-          members: project.teamMembers.map((member: TeamMember) => ({
+          members: project.teamMembers?.map((member: TeamMember) => ({
             id: member.id,
             name: member.name,
             avatar: member.avatar
-          })),
+          })) || [],
           createdAt: project.createdAt,
           deadline: project.dueDate
         }));
@@ -211,7 +211,7 @@ const Dashboard = () => {
             value={atRiskProjects}
             icon={Clock}
             color="red"
-            change={{ value: atRiskProjects, type: atRiskProjects > 0 ? 'increase' : 'neutral' }}
+            change={{ value: atRiskProjects > 0 ? 'increase' : 'neutral', type: 'neutral' }}
           />
         </div>
         
