@@ -15,6 +15,7 @@ export * from './workspace/workspaceProjectService';
 
 // Team services
 export * from './team';
+export { teamMemberService as teamService } from './team/teamMemberService';
 
 // Timeline services
 export * from './timeline/timelineService';

@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { teamService } from '@/services';
+import { departmentService } from '@/services/team/departmentService';
 
 interface TableField {
   name: string;
@@ -82,7 +82,7 @@ const DatabaseSchema = () => {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const deptDefs = await teamService.getDepartmentDefinitions();
+        const deptDefs = await departmentService.getDepartmentDefinitions();
         if (deptDefs && deptDefs.length > 0) {
           setDepartments(deptDefs);
         }

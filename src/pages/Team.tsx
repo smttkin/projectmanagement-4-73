@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   UserPlus, 
@@ -51,7 +50,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { teamService } from '@/services';
+import { teamMemberService } from '@/services/team/teamMemberService';
+import { departmentService } from '@/services/team/departmentService';
 
 // Mock team members data
 const teamMembers = [

@@ -1,174 +1,185 @@
-
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Plus } from 'lucide-react';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar"
+import { CalendarIcon } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { DatePicker } from "@/components/ui/date-picker"
 import { toast } from 'sonner';
-import { projectService } from '@/services';
-import { workspaceService } from '@/services';
-import { Project } from '@/types/project';
+import { workspaceProjectService } from '@/services';
+import { Workspace } from '@/types/workspace';
 
 interface AddProjectDialogProps {
-  workspaceId: string;
-  onProjectAdded?: () => void;
+  workspace: Workspace;
+  onProjectAdded: (project: any) => void;
 }
 
-const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ 
-  workspaceId,
-  onProjectAdded 
-}) => {
-  const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
+const AddProjectDialog = ({ workspace, onProjectAdded }: AddProjectDialogProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [dueDate, setDueDate] = useState<Date | undefined>(new Date());
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [projectName, setProjectName] = useState('');
-  const [projectDescription, setProjectDescription] = useState('');
-  const [projectPriority, setProjectPriority] = useState<'low' | 'medium' | 'high'>('medium');
+  const [error, setError] = useState('');
 
-  const handleCreateProject = async () => {
-    if (!projectName.trim()) {
-      toast.error('Project name is required');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate form
+    if (!name.trim()) {
+      setError('Project name is required');
       return;
     }
-
+    
+    setIsSubmitting(true);
+    setError('');
+    
     try {
-      setIsSubmitting(true);
+      // Use workspaceProjectService instead of workspaceService
+      const newProject = await workspaceProjectService.addProject({
+        name,
+        description,
+        workspaceId: workspace.id,
+        startDate: startDate?.toISOString() || new Date().toISOString(),
+        dueDate: dueDate?.toISOString() || new Date().toISOString(),
+      });
       
-      // Create new project
-      const newProject: Omit<Project, 'id' | 'createdAt' | 'updatedAt'> = {
-        title: projectName,
-        description: projectDescription,
-        status: 'active',
-        priority: projectPriority,
-        progress: 0,
-        startDate: new Date().toISOString(),
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        teamMembers: [],
-        tags: []
-      };
-      
-      // Save project and get back the created project with ID
-      const createdProject = await projectService.createProject(newProject);
-      
-      // Add project to workspace
-      await workspaceService.addProjectToWorkspace(workspaceId, createdProject.id);
-      
-      toast.success('Project created and added to workspace');
-      setOpen(false);
+      onProjectAdded(newProject);
+      setIsOpen(false);
+      toast.success('Project created successfully');
       
       // Reset form
-      setProjectName('');
-      setProjectDescription('');
-      setProjectPriority('medium');
-      
-      // Notify parent component about the new project
-      if (onProjectAdded) {
-        onProjectAdded();
-      }
-      
-      // Navigate to the new project
-      navigate(`/project/${createdProject.id}`);
+      setName('');
+      setDescription('');
+      setStartDate(new Date());
+      setDueDate(new Date());
     } catch (error) {
       console.error('Error creating project:', error);
-      toast.error('Failed to create project');
+      setError('Failed to create project. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Project
-        </Button>
+        <Button variant="outline">Add Project</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New Project</DialogTitle>
+          <DialogTitle>Add New Project</DialogTitle>
           <DialogDescription>
-            Add a new project to this workspace. Fill in the details below.
+            Create a new project within the workspace.
           </DialogDescription>
         </DialogHeader>
-        
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Name
-            </Label>
-            <Input
-              id="name"
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
-              className="col-span-3"
-              placeholder="Enter project name"
-            />
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Project Name
+              </Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="description" className="text-right">
+                Description
+              </Label>
+              <Input
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="start-date" className="text-right">
+                Start Date
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    {startDate ? (
+                      format(startDate, "PPP")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <DatePicker
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="due-date" className="text-right">
+                Due Date
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dueDate && "text-muted-foreground"
+                    )}
+                  >
+                    {dueDate ? (
+                      format(dueDate, "PPP")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <DatePicker
+                    mode="single"
+                    selected={dueDate}
+                    onSelect={setDueDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
-          
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="description" className="text-right">
-              Description
-            </Label>
-            <Textarea
-              id="description"
-              value={projectDescription}
-              onChange={(e) => setProjectDescription(e.target.value)}
-              className="col-span-3"
-              placeholder="Describe your project"
-              rows={3}
-            />
-          </div>
-          
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="priority" className="text-right">
-              Priority
-            </Label>
-            <Select 
-              value={projectPriority} 
-              onValueChange={(value) => setProjectPriority(value as 'low' | 'medium' | 'high')}
-            >
-              <SelectTrigger id="priority" className="col-span-3">
-                <SelectValue placeholder="Select priority" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleCreateProject} 
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Creating...' : 'Create Project'}
-          </Button>
-        </DialogFooter>
+          {error && <p className="text-red-500">{error}</p>}
+          <DialogFooter>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating...' : 'Create Project'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
