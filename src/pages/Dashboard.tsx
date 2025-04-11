@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
@@ -13,7 +14,7 @@ import ProjectsSection from '../components/dashboard/ProjectsSection';
 import TeamSection from '../components/dashboard/TeamSection';
 import TimelineSection from '../components/dashboard/TimelineSection';
 import { projectService } from '@/services';
-import { ProjectCardProps } from '../ProjectCard';
+import { Project } from '@/types/project';
 import { toast } from 'sonner';
 
 interface DashboardStats {
@@ -25,7 +26,7 @@ interface DashboardStats {
 }
 
 const Dashboard = () => {
-  const [projects, setProjects] = useState<ProjectCardProps[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     totalProjects: 0,
     completedProjects: 0,
@@ -54,8 +55,8 @@ const Dashboard = () => {
           totalProjects,
           completedProjects,
           completionPercentage,
-          inProgressProjects: projectsData.filter(p => p.status === 'in-progress').length,
-          atRiskProjects: projectsData.filter(p => p.status === 'at-risk').length
+          inProgressProjects: projectsData.filter(p => p.status === 'in-progress' || p.status === 'active').length,
+          atRiskProjects: projectsData.filter(p => p.status === 'at-risk' || p.status === 'on-hold').length
         });
       } catch (error) {
         console.error('Error fetching projects:', error);

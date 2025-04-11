@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -6,6 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,6 +56,10 @@ const AddProjectDialog = ({ workspace, onProjectAdded }: AddProjectDialogProps) 
         workspaceId: workspace.id,
         startDate: startDate?.toISOString() || new Date().toISOString(),
         dueDate: dueDate?.toISOString() || new Date().toISOString(),
+        priority: 'medium',
+        status: 'not-started',
+        members: [],
+        progress: 0,
       });
       
       onProjectAdded(newProject);

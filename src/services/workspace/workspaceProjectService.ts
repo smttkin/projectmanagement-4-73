@@ -1,8 +1,10 @@
 
 import { ApiService } from '../base/ApiService';
 import { Workspace } from '@/types/workspace';
+import { Project } from '@/types/project';
 import { toast } from 'sonner';
 import { workspaceService } from './workspaceService';
+import { projectService } from '../project/projectService';
 
 class WorkspaceProjectService extends ApiService {
   private storageKey = 'workspaces_data';
@@ -54,6 +56,24 @@ class WorkspaceProjectService extends ApiService {
       return this.simulateResponse(updatedWorkspace);
     } catch (error) {
       return this.handleError(error, `Failed to add project to workspace ${workspaceId}`);
+    }
+  }
+
+  // Add a new project and add it to workspace
+  async addProject(projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'> & { workspaceId: string }): Promise<Project> {
+    try {
+      const { workspaceId, ...projectDetails } = projectData;
+      
+      // Create the project first
+      const newProject = await projectService.createProject(projectDetails);
+      
+      // Then add it to the workspace
+      await this.addProjectToWorkspace(workspaceId, newProject.id);
+      
+      toast.success('Project created and added to workspace');
+      return newProject;
+    } catch (error) {
+      return this.handleError(error, 'Failed to create project');
     }
   }
   
