@@ -1,10 +1,13 @@
 
-import React, { useState } from 'react';
-import { FileCheck, Plus, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { FileCheck, FolderKanban, Users, Clock } from 'lucide-react';
 import ProjectCard, { ProjectCardProps } from '../ProjectCard';
 import { Button } from '../ui/button';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { workspaceService } from '@/services';
+import { Workspace } from '@/types/workspace';
 
 type StatusFilter = 'all' | 'completed' | 'in-progress' | 'not-started' | 'at-risk';
 
@@ -15,7 +18,32 @@ interface ProjectsSectionProps {
 
 const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects: propProjects, onProjectDeleted }) => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchWorkspaces = async () => {
+      try {
+        setIsLoading(true);
+        const data = await workspaceService.getWorkspaces();
+        setWorkspaces(data);
+      } catch (error) {
+        console.error('Error fetching workspaces:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchWorkspaces();
+  }, []);
+
+  // Helper function to get workspace for a project
+  const getProjectWorkspace = (projectId: string) => {
+    return workspaces.find(workspace => 
+      workspace.projects.includes(projectId)
+    );
+  };
 
   // Handle project deletion
   const handleDeleteProject = (id: string, e: React.MouseEvent) => {
@@ -32,6 +60,10 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects: propProject
   const filteredProjects = statusFilter === 'all'
     ? propProjects // Use the prop directly to ensure latest state
     : propProjects.filter(project => project.status === statusFilter);
+
+  const handleViewAllProjects = () => {
+    navigate('/projects');
+  };
 
   return (
     <div className="bg-card border border-border rounded-xl shadow-subtle overflow-hidden mb-6">
@@ -84,13 +116,40 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects: propProject
       <div className="p-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {filteredProjects.length > 0 ? (
-            filteredProjects.map(project => (
-              <ProjectCard 
-                key={project.id} 
-                {...project} 
-                onDelete={(e) => handleDeleteProject(project.id, e)}
-              />
-            ))
+            filteredProjects.slice(0, 4).map(project => {
+              const projectWorkspace = getProjectWorkspace(project.id);
+              
+              return (
+                <div key={project.id} className="border border-border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                  <ProjectCard 
+                    {...project} 
+                    onDelete={(e) => handleDeleteProject(project.id, e)}
+                  />
+                  {projectWorkspace && (
+                    <div className="px-4 py-3 bg-muted/30 border-t border-border flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <FolderKanban className="h-4 w-4 text-muted-foreground" />
+                        <div 
+                          className="w-2 h-2 rounded-full" 
+                          style={{ backgroundColor: projectWorkspace.color || '#4f46e5' }}
+                        />
+                        <span className="text-sm font-medium">{projectWorkspace.name}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">{project.members.length}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">{new Date(project.dueDate).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
           ) : (
             <div className="md:col-span-2 py-8 flex flex-col items-center justify-center text-center">
               <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-3">
@@ -98,11 +157,19 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects: propProject
               </div>
               <h3 className="text-lg font-medium text-foreground mb-1">No projects found</h3>
               <p className="text-muted-foreground max-w-md">
-                No projects match your current filter. Try selecting a different status or create a new project.
+                No projects match your current filter. Try selecting a different status or create a new project within a workspace.
               </p>
             </div>
           )}
         </div>
+        
+        {filteredProjects.length > 4 && (
+          <div className="mt-4 flex justify-center">
+            <Button variant="outline" onClick={handleViewAllProjects}>
+              View All Projects
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -10,4 +10,5 @@ export interface Workspace {
   color?: string;
   createdAt: string;
   updatedAt: string;
+  teamMembers?: string[]; // Optional array of team member IDs
 }

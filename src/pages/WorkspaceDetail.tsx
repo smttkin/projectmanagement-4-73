@@ -6,8 +6,8 @@ import {
   Briefcase,
   Edit,
   MoreHorizontal,
-  Plus,
-  Trash2
+  Trash2,
+  Users
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import { projectService } from '@/services/projectService';
 import { toast } from 'sonner';
 import { Workspace } from '@/types/workspace';
 import { Project, TeamMember } from '@/types/project';
+import AddProjectDialog from '@/components/workspace/AddProjectDialog';
 
 const WorkspaceDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,53 +34,53 @@ const WorkspaceDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('projects');
 
-  useEffect(() => {
-    const fetchWorkspaceData = async () => {
-      if (!id) return;
-      
-      try {
-        setIsLoading(true);
-        
-        // Fetch workspace details
-        const workspaceData = await workspaceService.getWorkspace(id);
-        if (!workspaceData) {
-          toast.error('Workspace not found');
-          navigate('/workspaces');
-          return;
-        }
-        
-        setWorkspace(workspaceData);
-        
-        // Fetch workspace projects
-        const projectsData = await workspaceService.getWorkspaceProjects(id);
-        
-        // Map projects to ProjectCardProps
-        const projectCardProps: ProjectCardProps[] = projectsData.map(project => ({
-          id: project.id,
-          title: project.title,
-          description: project.description,
-          progress: project.progress,
-          dueDate: project.dueDate,
-          priority: project.priority,
-          status: mapProjectStatus(project.status),
-          members: project.teamMembers.map((member: TeamMember) => ({
-            id: member.id,
-            name: member.name,
-            avatar: member.avatar
-          })),
-          createdAt: project.createdAt,
-          deadline: project.dueDate
-        }));
-        
-        setProjects(projectCardProps);
-      } catch (error) {
-        console.error('Error fetching workspace data:', error);
-        toast.error('Failed to load workspace data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchWorkspaceData = async () => {
+    if (!id) return;
     
+    try {
+      setIsLoading(true);
+      
+      // Fetch workspace details
+      const workspaceData = await workspaceService.getWorkspace(id);
+      if (!workspaceData) {
+        toast.error('Workspace not found');
+        navigate('/workspaces');
+        return;
+      }
+      
+      setWorkspace(workspaceData);
+      
+      // Fetch workspace projects
+      const projectsData = await workspaceService.getWorkspaceProjects(id);
+      
+      // Map projects to ProjectCardProps
+      const projectCardProps: ProjectCardProps[] = projectsData.map(project => ({
+        id: project.id,
+        title: project.title,
+        description: project.description,
+        progress: project.progress,
+        dueDate: project.dueDate,
+        priority: project.priority,
+        status: mapProjectStatus(project.status),
+        members: project.teamMembers.map((member: TeamMember) => ({
+          id: member.id,
+          name: member.name,
+          avatar: member.avatar
+        })),
+        createdAt: project.createdAt,
+        deadline: project.dueDate
+      }));
+      
+      setProjects(projectCardProps);
+    } catch (error) {
+      console.error('Error fetching workspace data:', error);
+      toast.error('Failed to load workspace data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchWorkspaceData();
   }, [id, navigate]);
 
@@ -139,8 +140,9 @@ const WorkspaceDetail = () => {
     }
   };
   
-  const handleAddProject = () => {
-    navigate(`/project/new?workspaceId=${id}`);
+  const handleProjectAdded = () => {
+    // Refresh workspace data to show the new project
+    fetchWorkspaceData();
   };
 
   if (isLoading) {
@@ -196,10 +198,10 @@ const WorkspaceDetail = () => {
             </div>
             
             <div className="flex gap-2">
-              <Button onClick={handleAddProject}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Project
-              </Button>
+              <AddProjectDialog 
+                workspaceId={id || ''}
+                onProjectAdded={handleProjectAdded}
+              />
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -251,25 +253,70 @@ const WorkspaceDetail = () => {
               <div className="text-center py-20 bg-card rounded-lg border">
                 <h3 className="text-lg font-medium mb-2">No projects in this workspace</h3>
                 <p className="text-muted-foreground mb-6">Get started by adding your first project</p>
-                <Button onClick={handleAddProject}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Project
-                </Button>
+                <AddProjectDialog 
+                  workspaceId={id || ''}
+                  onProjectAdded={handleProjectAdded}
+                />
               </div>
             )}
           </TabsContent>
           
           <TabsContent value="activity">
-            <div className="bg-card rounded-lg border p-6 text-center">
-              <h3 className="text-lg font-medium">Activity tracking coming soon</h3>
-              <p className="text-muted-foreground">We're working on adding activity tracking for workspaces</p>
+            <div className="bg-card rounded-lg border p-6">
+              <h3 className="text-lg font-medium mb-4">Recent Activity</h3>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 p-3 bg-muted/40 rounded-md">
+                  <Users className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">Team member added</p>
+                    <p className="text-sm text-muted-foreground">John Doe was added to the workspace</p>
+                    <p className="text-xs text-muted-foreground mt-1">2 hours ago</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3 p-3 bg-muted/40 rounded-md">
+                  <Briefcase className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">Project updated</p>
+                    <p className="text-sm text-muted-foreground">Website Redesign progress updated to 75%</p>
+                    <p className="text-xs text-muted-foreground mt-1">1 day ago</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </TabsContent>
           
           <TabsContent value="settings">
-            <div className="bg-card rounded-lg border p-6 text-center">
-              <h3 className="text-lg font-medium">Workspace settings coming soon</h3>
-              <p className="text-muted-foreground">Additional workspace settings will be available soon</p>
+            <div className="bg-card rounded-lg border p-6">
+              <h3 className="text-lg font-medium mb-4">Workspace Settings</h3>
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Workspace Color</h4>
+                  <div className="flex gap-2">
+                    {['#4f46e5', '#0891b2', '#65a30d', '#d97706', '#dc2626'].map(color => (
+                      <button
+                        key={color}
+                        className="w-8 h-8 rounded-full border-2 transition-all"
+                        style={{ 
+                          backgroundColor: color, 
+                          borderColor: workspace.color === color ? 'white' : color
+                        }}
+                        aria-label={`Select color ${color}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Access Control</h4>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm">
+                      <Users className="h-4 w-4 mr-2" />
+                      Manage Access
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
