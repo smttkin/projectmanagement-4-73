@@ -19,6 +19,8 @@ import DatabaseSchema from './pages/DatabaseSchema';
 import Reports from './pages/Reports';
 import Index from './pages/Index';
 import Projects from './pages/Projects';
+import Workspaces from './pages/Workspaces';
+import WorkspaceDetail from './pages/WorkspaceDetail';
 
 // Initialize QueryClient
 const queryClient = new QueryClient();
@@ -35,6 +37,8 @@ function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/projects" element={<Projects />} />
+              <Route path="/workspaces" element={<Workspaces />} />
+              <Route path="/workspace/:id" element={<WorkspaceDetail />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/team" element={<Team />} />

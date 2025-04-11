@@ -10,7 +10,8 @@ import {
   FileText, 
   BarChart3,
   Database,
-  FolderKanban
+  FolderKanban,
+  Briefcase
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -60,6 +61,17 @@ const Navbar: React.FC = () => {
               <Link to="/dashboard" className="flex items-center text-sm">
                 <LayoutDashboard className="h-4 w-4 mr-1" />
                 <span className="hidden md:inline">Dashboard</span>
+              </Link>
+            </Button>
+            
+            <Button
+              variant={isActive('/workspaces') ? "secondary" : "ghost"}
+              size="sm"
+              asChild
+            >
+              <Link to="/workspaces" className="flex items-center text-sm">
+                <Briefcase className="h-4 w-4 mr-1" />
+                <span className="hidden md:inline">Workspaces</span>
               </Link>
             </Button>
             
