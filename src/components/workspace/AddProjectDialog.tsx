@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -56,7 +55,7 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({
       const newProject: Omit<Project, 'id' | 'createdAt' | 'updatedAt'> = {
         title: projectName,
         description: projectDescription,
-        status: 'active',
+        status: 'active', // Changed from 'not-started' to 'active' to match Project type
         priority: projectPriority,
         progress: 0,
         startDate: new Date().toISOString(),

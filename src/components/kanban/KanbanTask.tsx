@@ -53,17 +53,17 @@ const KanbanTaskComponent: React.FC<KanbanTaskProps> = ({
   
   return (
     <Card 
-      className="mb-2 cursor-pointer hover:shadow-md transition-shadow border-border dark:border-border/60 bg-card hover:bg-card/80 dark:hover:bg-card/90"
+      className="mb-1 cursor-pointer hover:shadow-sm transition-shadow border-border dark:border-border/60 bg-card hover:bg-card/80 dark:hover:bg-card/90"
       draggable
       onDragStart={(e) => onDragStart?.(e, task)}
     >
-      <CardContent className="p-3 relative">
+      <CardContent className="p-2 relative">
         {/* Task dropdown menu */}
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-1 right-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted">
-                <MoreHorizontal className="h-4 w-4" />
+              <button className="h-5 w-5 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted">
+                <MoreHorizontal className="h-3 w-3" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -82,7 +82,7 @@ const KanbanTaskComponent: React.FC<KanbanTaskProps> = ({
       
         {/* Task title */}
         <h3 
-          className="text-sm font-medium mb-1 pr-6 text-foreground"
+          className="text-xs font-medium mb-0.5 pr-5 text-foreground line-clamp-1"
           onClick={() => onClick?.(task)}
         >
           {task.title}
@@ -91,7 +91,7 @@ const KanbanTaskComponent: React.FC<KanbanTaskProps> = ({
         {/* Task description */}
         {task.description && (
           <p 
-            className="text-xs text-muted-foreground mb-2 line-clamp-2"
+            className="text-[10px] text-muted-foreground mb-1 line-clamp-1"
             onClick={() => onClick?.(task)}
           >
             {task.description}
@@ -99,52 +99,54 @@ const KanbanTaskComponent: React.FC<KanbanTaskProps> = ({
         )}
         
         {/* Task metadata */}
-        <div className="flex items-center justify-between text-xs mt-2">
+        <div className="flex items-center justify-between text-[10px] mt-1">
           <Badge 
             variant="outline" 
-            className={cn("text-xs", priorityConfig[task.priority].color)}
+            className={cn("text-[10px] px-1 py-0", priorityConfig[task.priority].color)}
           >
             {priorityConfig[task.priority].label}
           </Badge>
           
           {task.dueDate && (
             <div className="flex items-center text-muted-foreground">
-              <Calendar className="h-3 w-3 mr-1" />
-              <span>{task.dueDate}</span>
+              <Calendar className="h-2 w-2 mr-0.5" />
+              <span className="text-[10px]">{task.dueDate}</span>
             </div>
           )}
         </div>
         
         {/* Task activity indicators */}
-        <div className="flex items-center justify-start gap-3 mt-2 text-xs text-muted-foreground">
-          {commentCount > 0 && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center">
-                  <MessageSquare className="h-3 w-3 mr-1" />
-                  <span>{commentCount}</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                {commentCount} comment{commentCount !== 1 ? 's' : ''}
-              </TooltipContent>
-            </Tooltip>
-          )}
-          
-          {attachmentCount > 0 && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center">
-                  <Paperclip className="h-3 w-3 mr-1" />
-                  <span>{attachmentCount}</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                {attachmentCount} attachment{attachmentCount !== 1 ? 's' : ''}
-              </TooltipContent>
-            </Tooltip>
-          )}
-        </div>
+        {(commentCount > 0 || attachmentCount > 0) && (
+          <div className="flex items-center justify-start gap-2 mt-1 text-[10px] text-muted-foreground">
+            {commentCount > 0 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center">
+                    <MessageSquare className="h-2 w-2 mr-0.5" />
+                    <span>{commentCount}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {commentCount} comment{commentCount !== 1 ? 's' : ''}
+                </TooltipContent>
+              </Tooltip>
+            )}
+            
+            {attachmentCount > 0 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center">
+                    <Paperclip className="h-2 w-2 mr-0.5" />
+                    <span>{attachmentCount}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {attachmentCount} attachment{attachmentCount !== 1 ? 's' : ''}
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
