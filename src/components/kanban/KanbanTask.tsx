@@ -57,13 +57,13 @@ const KanbanTaskComponent: React.FC<KanbanTaskProps> = ({
       draggable
       onDragStart={(e) => onDragStart?.(e, task)}
     >
-      <CardContent className="p-2 relative">
+      <CardContent className="p-1 relative">
         {/* Task dropdown menu */}
-        <div className="absolute top-1 right-1">
+        <div className="absolute top-0.5 right-0.5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="h-5 w-5 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted">
-                <MoreHorizontal className="h-3 w-3" />
+              <button className="h-4 w-4 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted">
+                <MoreHorizontal className="h-2.5 w-2.5" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -82,27 +82,27 @@ const KanbanTaskComponent: React.FC<KanbanTaskProps> = ({
       
         {/* Task title */}
         <h3 
-          className="text-xs font-medium mb-0.5 pr-5 text-foreground line-clamp-1"
+          className="text-[11px] font-medium mb-0.5 pr-4 text-foreground line-clamp-1"
           onClick={() => onClick?.(task)}
         >
           {task.title}
         </h3>
         
-        {/* Task description */}
+        {/* Task description - only show if available */}
         {task.description && (
           <p 
-            className="text-[10px] text-muted-foreground mb-1 line-clamp-1"
+            className="text-[9px] text-muted-foreground mb-0.5 line-clamp-1"
             onClick={() => onClick?.(task)}
           >
             {task.description}
           </p>
         )}
         
-        {/* Task metadata */}
-        <div className="flex items-center justify-between text-[10px] mt-1">
+        {/* Task metadata - simplified layout */}
+        <div className="flex items-center justify-between text-[9px] mt-0.5">
           <Badge 
             variant="outline" 
-            className={cn("text-[10px] px-1 py-0", priorityConfig[task.priority].color)}
+            className={cn("text-[8px] px-1 py-0 h-3", priorityConfig[task.priority].color)}
           >
             {priorityConfig[task.priority].label}
           </Badge>
@@ -110,14 +110,14 @@ const KanbanTaskComponent: React.FC<KanbanTaskProps> = ({
           {task.dueDate && (
             <div className="flex items-center text-muted-foreground">
               <Calendar className="h-2 w-2 mr-0.5" />
-              <span className="text-[10px]">{task.dueDate}</span>
+              <span className="text-[8px]">{task.dueDate}</span>
             </div>
           )}
         </div>
         
-        {/* Task activity indicators */}
+        {/* Task activity indicators - simplified */}
         {(commentCount > 0 || attachmentCount > 0) && (
-          <div className="flex items-center justify-start gap-2 mt-1 text-[10px] text-muted-foreground">
+          <div className="flex items-center justify-start gap-1 mt-0.5 text-[8px] text-muted-foreground">
             {commentCount > 0 && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -126,7 +126,7 @@ const KanbanTaskComponent: React.FC<KanbanTaskProps> = ({
                     <span>{commentCount}</span>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent>
+                <TooltipContent side="bottom" className="text-xs">
                   {commentCount} comment{commentCount !== 1 ? 's' : ''}
                 </TooltipContent>
               </Tooltip>
@@ -140,7 +140,7 @@ const KanbanTaskComponent: React.FC<KanbanTaskProps> = ({
                     <span>{attachmentCount}</span>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent>
+                <TooltipContent side="bottom" className="text-xs">
                   {attachmentCount} attachment{attachmentCount !== 1 ? 's' : ''}
                 </TooltipContent>
               </Tooltip>

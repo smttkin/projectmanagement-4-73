@@ -86,10 +86,9 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   
   // Enhanced theme-reactive column styles with user color preservation
   const getColumnStyles = () => {
-    // Base styles common to all columns
-    const baseClasses = "flex flex-col h-full min-w-[280px] rounded-md border";
+    // Base styles common to all columns - adjusted for compactness
+    const baseClasses = "flex flex-col h-full min-w-[200px] rounded-md border";
     
-    // If column has a custom color class, use it but ensure text is visible
     if (column.color) {
       // These color classes map to light-mode colors, we'll add dark mode handling
       const colorMap = {
@@ -144,9 +143,9 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     }
   };
   
-  // Get header style based on column status
+  // Get header style based on column status - more compact
   const getHeaderStyles = () => {
-    const baseClasses = "p-2 border-b bg-opacity-50 flex items-center justify-between";
+    const baseClasses = "p-1.5 border-b bg-opacity-50 flex items-center justify-between";
     
     if (column.color) {
       // Extract color family name for consistent theming
@@ -170,36 +169,57 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     }
   };
   
-  // Get task count badge style
+  // Get task count badge style - smaller
   const getTaskCountBadgeStyle = () => {
-    // Default style that works in both light and dark modes
-    return "text-xs text-foreground bg-background/70 dark:bg-background/30 px-1.5 py-0.5 rounded mr-1";
+    return "text-[10px] text-foreground bg-background/70 dark:bg-background/30 px-1 py-0.5 rounded mr-1";
   };
   
-  // Get add task button style
+  // Get add task button style - smaller
   const getAddTaskButtonStyle = () => {
-    return "w-full justify-start text-xs h-8 hover:bg-primary/10 dark:hover:bg-primary/10 text-foreground dark:text-foreground";
+    return "w-full justify-start text-[10px] h-6 hover:bg-primary/10 dark:hover:bg-primary/10 text-foreground dark:text-foreground";
   };
   
   return (
     <div 
       className={getColumnStyles()}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        const taskId = e.dataTransfer.getData('taskId');
+        const task = tasks.find(t => t.id === taskId);
+        if (task && onDrop) {
+          onDrop(task, column.status);
+        }
+      }}
     >
       <div className={getHeaderStyles()}>
         {isEditing ? (
           <Input
             value={columnTitle}
             onChange={(e) => setColumnTitle(e.target.value)}
-            onBlur={handleTitleSave}
-            onKeyDown={handleKeyDown}
-            className="h-7 text-sm"
+            onBlur={() => {
+              if (columnTitle.trim()) {
+                onUpdateColumn?.(column.id, { title: columnTitle });
+              }
+              setIsEditing(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                if (columnTitle.trim()) {
+                  onUpdateColumn?.(column.id, { title: columnTitle });
+                }
+                setIsEditing(false);
+              } else if (e.key === 'Escape') {
+                setColumnTitle(column.title);
+                setIsEditing(false);
+              }
+            }}
+            className="h-6 text-xs"
             autoFocus
           />
         ) : (
           <div className="flex items-center justify-between w-full">
-            <h3 className="font-medium text-sm text-foreground dark:text-foreground">{column.title}</h3>
+            <h3 className="font-medium text-xs text-foreground dark:text-foreground">{column.title}</h3>
             <div className="flex items-center">
               <span className={getTaskCountBadgeStyle()}>
                 {tasks.length}
@@ -207,8 +227,8 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                    <MoreHorizontal className="h-3.5 w-3.5" />
+                  <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                    <MoreHorizontal className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -231,27 +251,29 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
         )}
       </div>
       
-      <div className="flex-1 p-2 overflow-y-auto h-full">
+      <div className="flex-1 p-1.5 overflow-y-auto h-full">
         {tasks.map(task => (
           <KanbanTask 
             key={task.id} 
             task={task} 
             onClick={() => onTaskClick?.(task)}
-            onDragStart={handleDragStart}
+            onDragStart={(e, task) => {
+              e.dataTransfer.setData('taskId', task.id);
+            }}
             onEdit={onEditTask}
             onDelete={onDeleteTask}
           />
         ))}
       </div>
       
-      <div className="p-2 mt-auto">
+      <div className="p-1.5 mt-auto">
         <Button 
           variant="ghost" 
           size="sm" 
           className={getAddTaskButtonStyle()}
           onClick={() => onAddTask?.(column.status)}
         >
-          <Plus className="h-3 w-3 mr-1" />
+          <Plus className="h-2.5 w-2.5 mr-1" />
           Add Task
         </Button>
       </div>

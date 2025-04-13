@@ -52,12 +52,14 @@ export const BoardContainer: React.FC<BoardContainerProps> = ({
         const containerWidth = container.offsetWidth;
         setContainerWidth(containerWidth);
         
-        // Calculate how many columns can fit in the view
-        const calculatedColumnsPerView = Math.floor(containerWidth / 320) || 3;
+        // Calculate how many columns can fit in the view - more columns for wider screens
+        // Use smaller column width (220px instead of 320px)
+        const calculatedColumnsPerView = Math.floor(containerWidth / 220) || 3;
         setColumnsPerView(calculatedColumnsPerView);
         
         // Set column width based on the container width and columns per view
-        const colWidth = (containerWidth - 24) / columnsPerView;
+        // Subtract a smaller gap (16px instead of 24px)
+        const colWidth = (containerWidth - 16) / calculatedColumnsPerView;
         setColumnWidth(colWidth);
       }
     };
@@ -102,8 +104,8 @@ export const BoardContainer: React.FC<BoardContainerProps> = ({
   };
   
   return (
-    <div className="relative flex-1 mt-4 h-full">
-      <div className="h-[calc(100vh-170px)] overflow-hidden flex flex-col" ref={scrollContainerRef}>
+    <div className="relative flex-1 mt-2 h-full">
+      <div className="h-[calc(100vh-150px)] overflow-hidden flex flex-col" ref={scrollContainerRef}>
         <BoardScrollControls 
           currentScrollIndex={currentScrollIndex}
           columnsLength={columns.length}
