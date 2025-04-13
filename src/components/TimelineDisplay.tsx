@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, ChevronDown, ChevronUp, Calendar, ArrowRight } from 'lucide-react';
 import { format, addDays, startOfMonth, getMonth, getYear, isSameDay, isBefore, isAfter } from 'date-fns';
 
 export interface TimelineItem {
@@ -25,10 +25,26 @@ interface TimelineDisplayProps {
 }
 
 const statusConfig = {
-  'completed': { color: 'bg-green-500 border-green-600', icon: CheckCircle, textColor: 'text-green-800' },
-  'in-progress': { color: 'bg-primary border-primary/70', icon: Clock, textColor: 'text-primary-foreground' },
-  'not-started': { color: 'bg-orange-400 border-orange-500', icon: Clock, textColor: 'text-orange-800' },
-  'at-risk': { color: 'bg-red-500 border-red-600', icon: AlertCircle, textColor: 'text-red-800' },
+  'completed': { 
+    color: 'bg-gradient-to-r from-green-500 to-emerald-500 border-green-600', 
+    icon: CheckCircle, 
+    textColor: 'text-white'
+  },
+  'in-progress': { 
+    color: 'bg-gradient-to-r from-blue-500 to-indigo-500 border-blue-600', 
+    icon: Clock, 
+    textColor: 'text-white'
+  },
+  'not-started': { 
+    color: 'bg-gradient-to-r from-orange-400 to-amber-500 border-orange-500', 
+    icon: Clock, 
+    textColor: 'text-white'
+  },
+  'at-risk': { 
+    color: 'bg-gradient-to-r from-red-500 to-rose-500 border-red-600', 
+    icon: AlertCircle, 
+    textColor: 'text-white'
+  },
 };
 
 const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
@@ -37,6 +53,9 @@ const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
   endDate = addDays(new Date(), 28),
   viewMode = 'month',
 }) => {
+  const [expandedItem, setExpandedItem] = useState<string | null>(null);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
   // Generate array of dates between startDate and endDate
   const generateDateRange = () => {
     const dates = [];
@@ -144,20 +163,25 @@ const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
   };
   
   const monthGroups = getMonthGroups();
+
+  const toggleItemExpand = (itemId: string) => {
+    setExpandedItem(expandedItem === itemId ? null : itemId);
+  };
   
   return (
     <div className="timeline-container relative overflow-x-auto">
       <div className="min-w-[800px]">
         {/* Month headers */}
-        <div className="flex border-b border-border h-10">
+        <div className="flex border-b border-border h-10 bg-gradient-to-r from-background to-muted/20">
           {monthGroups.map((monthGroup, index) => {
             const width = ((monthGroup.end - monthGroup.start + 1) / dateRange.length) * 100;
             return (
               <div
                 key={`month-${index}`}
-                className="flex-shrink-0 px-2 py-1 font-medium flex items-center justify-center text-sm bg-muted/30"
+                className="flex-shrink-0 px-2 py-1 font-medium flex items-center justify-center text-sm border-r border-border/30 last:border-r-0"
                 style={{ width: `${width}%` }}
               >
+                <Calendar className="h-4 w-4 mr-1.5 text-primary" />
                 {monthGroup.month}
               </div>
             );
@@ -165,14 +189,14 @@ const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
         </div>
         
         {/* Days of the week */}
-        <div className="flex border-b border-border">
+        <div className="flex border-b border-border sticky top-0 z-10">
           {weeks.map((week, weekIndex) => (
             <div key={`week-${weekIndex}`} className="flex-1 flex">
               {week.map((day, dayIndex) => (
                 <div 
                   key={`day-${weekIndex}-${dayIndex}`} 
                   className={cn(
-                    "flex-1 text-center py-2 text-xs font-medium border-r border-border last:border-r-0",
+                    "flex-1 text-center py-2 text-xs font-medium border-r border-border/30 last:border-r-0",
                     isToday(day) ? "bg-primary/10" : (day.getDay() === 0 || day.getDay() === 6) ? "bg-muted/30" : ""
                   )}
                 >
@@ -180,8 +204,8 @@ const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
                     {format(day, 'EEE')}
                   </div>
                   <div className={cn(
-                    "inline-flex items-center justify-center w-6 h-6 rounded-full",
-                    isToday(day) ? "bg-primary text-white" : ""
+                    "inline-flex items-center justify-center w-6 h-6 rounded-full transition-all",
+                    isToday(day) ? "bg-primary text-white shadow-md" : "hover:bg-muted/60"
                   )}>
                     {format(day, 'd')}
                   </div>
@@ -192,7 +216,7 @@ const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
         </div>
         
         {/* Timeline items */}
-        <div className="relative pt-8 pb-4">
+        <div className="relative pt-4 pb-4">
           {/* Background grid */}
           <div className="absolute top-0 left-0 right-0 bottom-0 flex">
             {weeks.map((week, weekIndex) => (
@@ -201,7 +225,7 @@ const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
                   <div 
                     key={`grid-day-${weekIndex}-${dayIndex}`} 
                     className={cn(
-                      "flex-1 border-r border-border/60 last:border-r-0",
+                      "flex-1 border-r border-border/30 last:border-r-0",
                       isToday(day) ? "bg-primary/5" : 
                       (day.getDay() === 0 || day.getDay() === 6) ? "bg-muted/20" : ""
                     )}
@@ -212,30 +236,36 @@ const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
           </div>
           
           {/* Timeline bars */}
-          <div className="space-y-5 relative z-10">
+          <div className="space-y-3 relative z-10">
             {items.map((item) => {
               const style = getItemStyle(item);
               const StatusIcon = statusConfig[item.status].icon;
+              const isExpanded = expandedItem === item.id;
+              const isHovered = hoveredItem === item.id;
               
               return (
-                <div key={item.id} className="relative h-10">
+                <div key={item.id} className="relative">
                   <div 
                     className={cn(
-                      "absolute top-0 h-full rounded-md border shadow-sm flex items-center px-3 transition-all",
-                      statusConfig[item.status].color
+                      "absolute top-0 h-10 rounded-md border shadow-md flex items-center px-3 transition-all duration-300 cursor-pointer",
+                      statusConfig[item.status].color,
+                      (isExpanded || isHovered) ? "h-12 -top-1 shadow-lg z-20" : ""
                     )} 
                     style={style}
+                    onClick={() => toggleItemExpand(item.id)}
+                    onMouseEnter={() => setHoveredItem(item.id)}
+                    onMouseLeave={() => setHoveredItem(null)}
                   >
                     <div className="flex items-center justify-between w-full overflow-hidden whitespace-nowrap">
                       <div className="flex items-center space-x-2 overflow-hidden">
-                        <StatusIcon size={14} className="shrink-0" />
-                        <span className="font-medium text-xs overflow-hidden text-ellipsis">
+                        <StatusIcon size={16} className="shrink-0 animate-pulse" />
+                        <span className="font-medium text-xs overflow-hidden text-ellipsis text-white">
                           {item.title}
                         </span>
                       </div>
                       
                       {item.assignee && (
-                        <div className="h-6 w-6 rounded-full bg-white/80 overflow-hidden flex-shrink-0 ml-2 border border-white/90">
+                        <div className="h-6 w-6 rounded-full bg-white/80 overflow-hidden flex-shrink-0 ml-2 border border-white/90 hover:scale-110 transition-transform">
                           {item.assignee.avatar ? (
                             <img 
                               src={item.assignee.avatar} 
@@ -249,8 +279,48 @@ const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
                           )}
                         </div>
                       )}
+                      
+                      <div className={cn("ml-1", isExpanded ? "rotate-180" : "")}>
+                        <ChevronDown size={14} className="text-white/90" />
+                      </div>
                     </div>
                   </div>
+                  
+                  {/* Expanded view */}
+                  {isExpanded && (
+                    <div 
+                      className="absolute top-12 left-0 right-0 bg-card p-3 rounded-md border border-border shadow-lg z-20 animate-fade-in"
+                      style={style}
+                    >
+                      <div className="text-sm font-medium mb-1">{item.title}</div>
+                      <div className="text-xs text-muted-foreground flex items-center mb-1">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        {format(item.startDate, 'MMM d')} 
+                        <ArrowRight className="h-3 w-3 mx-1" /> 
+                        {format(item.endDate, 'MMM d, yyyy')}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className={cn(
+                          "text-xs px-2 py-0.5 rounded-full flex items-center",
+                          item.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          item.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                          item.status === 'not-started' ? 'bg-orange-100 text-orange-800' :
+                          'bg-red-100 text-red-800'
+                        )}>
+                          <StatusIcon size={10} className="mr-1" />
+                          {item.status.replace('-', ' ')}
+                        </span>
+                        {item.assignee && (
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            Assigned to: 
+                            <span className="ml-1 font-medium">
+                              {item.assignee.name}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -19,11 +18,15 @@ import {
   CalendarDays,
   LayoutDashboard,
   FolderKanban,
-  Kanban
+  Kanban,
+  Filter,
+  PlusCircle,
+  ListFilter
 } from 'lucide-react';
 import { addDays, format, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
 import { projectsData } from '@/data/projects';
 import { KanbanWorksheet } from '@/types/kanban';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const Timeline: React.FC = () => {
   const navigate = useNavigate();
@@ -231,13 +234,15 @@ const Timeline: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-2">Project Timeline</h1>
+          <h1 className="text-2xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-600">
+            Project Timeline
+          </h1>
           <p className="text-muted-foreground">Visualize project tasks and milestones on a timeline.</p>
         </div>
         
         {/* Controls */}
-        <div className="bg-card border border-border rounded-xl shadow-subtle overflow-hidden mb-6">
-          <div className="p-4 border-b border-border flex flex-wrap gap-4 items-center justify-between">
+        <div className="bg-card border border-border rounded-xl shadow-subtle overflow-hidden mb-6 transition-all hover:shadow-md">
+          <div className="p-4 border-b border-border flex flex-wrap gap-4 items-center justify-between bg-gradient-to-r from-background to-muted/20">
             <div className="flex items-center">
               <Button 
                 variant="outline" 
@@ -268,6 +273,7 @@ const Timeline: React.FC = () => {
                   variant={viewMode === 'week' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => handleViewModeChange('week')}
+                  className="transition-all"
                 >
                   <Calendar className="h-4 w-4 mr-1" />
                   Week
@@ -276,6 +282,7 @@ const Timeline: React.FC = () => {
                   variant={viewMode === 'month' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => handleViewModeChange('month')}
+                  className="transition-all"
                 >
                   <CalendarDays className="h-4 w-4 mr-1" />
                   Month
@@ -284,6 +291,7 @@ const Timeline: React.FC = () => {
                   variant={viewMode === 'quarter' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => handleViewModeChange('quarter')}
+                  className="transition-all"
                 >
                   <CalendarDays className="h-4 w-4 mr-1" />
                   Quarter
@@ -292,7 +300,7 @@ const Timeline: React.FC = () => {
             </div>
           </div>
           
-          <div className="p-4 border-b border-border bg-muted/30">
+          <div className="p-4 border-b border-border bg-muted/10">
             <div className="flex flex-wrap items-center gap-4">
               <div className="w-full sm:w-auto">
                 <Label htmlFor="projectFilter" className="text-xs mb-1 block">Project</Label>
@@ -344,39 +352,77 @@ const Timeline: React.FC = () => {
                 </div>
               )}
               
-              {selectedProject && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-auto"
-                  onClick={() => navigate(`/project/${selectedProject}`)}
-                >
-                  <LayoutDashboard className="h-4 w-4 mr-1" />
-                  View Project
+              <div className="flex flex-wrap gap-2 mt-auto ml-auto">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8">
+                      <ListFilter className="h-3.5 w-3.5 mr-1" />
+                      Filters
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-3">
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-medium">Filter by Status</h3>
+                      <div className="flex flex-wrap gap-1">
+                        <Button variant="outline" size="sm" className="text-xs h-7 px-2 bg-green-100 text-green-800 hover:bg-green-200 border-green-200">
+                          Completed
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-xs h-7 px-2 bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200">
+                          In Progress
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-xs h-7 px-2 bg-orange-100 text-orange-800 hover:bg-orange-200 border-orange-200">
+                          Not Started
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-xs h-7 px-2 bg-red-100 text-red-800 hover:bg-red-200 border-red-200">
+                          At Risk
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                
+                {selectedProject && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8"
+                    onClick={() => navigate(`/project/${selectedProject}`)}
+                  >
+                    <LayoutDashboard className="h-3.5 w-3.5 mr-1" />
+                    View Project
+                  </Button>
+                )}
+                
+                {selectedProject && selectedWorksheet && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8"
+                    onClick={() => navigate(`/project/${selectedProject}`, { 
+                      state: { openKanban: true, worksheetId: selectedWorksheet } 
+                    })}
+                  >
+                    <FolderKanban className="h-3.5 w-3.5 mr-1" />
+                    Open Kanban
+                  </Button>
+                )}
+                
+                <Button variant="default" size="sm" className="h-8">
+                  <PlusCircle className="h-3.5 w-3.5 mr-1" />
+                  Add Event
                 </Button>
-              )}
-              
-              {selectedProject && selectedWorksheet && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-auto"
-                  onClick={() => navigate(`/project/${selectedProject}`, { 
-                    state: { openKanban: true, worksheetId: selectedWorksheet } 
-                  })}
-                >
-                  <FolderKanban className="h-4 w-4 mr-1" />
-                  Open Kanban
-                </Button>
-              )}
+              </div>
             </div>
           </div>
         </div>
         
         {/* Timeline */}
-        <div className="bg-card border border-border rounded-xl shadow-subtle overflow-hidden mb-6">
-          <div className="p-4 border-b border-border">
-            <h2 className="text-lg font-medium">Timeline View</h2>
+        <div className="bg-card border border-border rounded-xl shadow-subtle overflow-hidden mb-6 transition-all hover:shadow-md">
+          <div className="p-4 border-b border-border bg-gradient-to-r from-background to-muted/20">
+            <h2 className="text-lg font-medium flex items-center">
+              <Calendar className="h-5 w-5 mr-2 text-primary" />
+              Timeline View
+            </h2>
           </div>
           
           <div className="p-4">
@@ -388,10 +434,15 @@ const Timeline: React.FC = () => {
                 viewMode={viewMode}
               />
             ) : (
-              <div className="text-center py-8">
+              <div className="text-center py-12 bg-muted/5 rounded-lg border border-dashed border-muted-foreground/20">
+                <Calendar className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
                 <p className="text-muted-foreground">
                   No timeline items to display for the selected project or worksheet.
                 </p>
+                <Button variant="outline" className="mt-4">
+                  <PlusCircle className="h-4 w-4 mr-1" />
+                  Add Event
+                </Button>
               </div>
             )}
           </div>
