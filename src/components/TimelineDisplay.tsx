@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { AlertCircle, CheckCircle, Clock, ChevronDown, ChevronUp, Calendar, ArrowRight } from 'lucide-react';
@@ -168,6 +167,29 @@ const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
     setExpandedItem(expandedItem === itemId ? null : itemId);
   };
   
+  // Calculate dynamic row height based on item's content
+  const getItemHeight = (item: TimelineItem) => {
+    // Calculate height based on content - more complex items get more height
+    const baseHeight = 14; // Base height for all items
+    
+    // Add height for longer titles
+    const titleLength = item.title.length;
+    const titleHeight = titleLength > 30 ? 4 : (titleLength > 20 ? 2 : 0);
+    
+    // Add height for assignee
+    const assigneeHeight = item.assignee ? 4 : 0;
+    
+    return baseHeight + titleHeight + assigneeHeight;
+  };
+  
+  // Get expanded item style for better visualization
+  const getExpandedItemStyle = (item: TimelineItem) => {
+    return {
+      maxHeight: '120px', // Limit maximum height for expanded items
+      overflow: 'auto'
+    };
+  };
+  
   return (
     <div className="timeline-container relative overflow-x-auto">
       <div className="min-w-[800px]">
@@ -215,7 +237,7 @@ const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
           ))}
         </div>
         
-        {/* Timeline items */}
+        {/* Timeline items - with enhanced height handling */}
         <div className="relative pt-4 pb-4">
           {/* Background grid */}
           <div className="absolute top-0 left-0 right-0 bottom-0 flex">
@@ -235,23 +257,29 @@ const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
             ))}
           </div>
           
-          {/* Timeline bars */}
-          <div className="space-y-3 relative z-10">
+          {/* Timeline bars with adaptive heights */}
+          <div className="space-y-4 relative z-10">
             {items.map((item) => {
               const style = getItemStyle(item);
               const StatusIcon = statusConfig[item.status].icon;
               const isExpanded = expandedItem === item.id;
               const isHovered = hoveredItem === item.id;
+              const itemHeight = getItemHeight(item);
               
               return (
-                <div key={item.id} className="relative">
+                <div key={item.id} className="relative" style={{ minHeight: `${itemHeight}px` }}>
                   <div 
                     className={cn(
-                      "absolute top-0 h-10 rounded-md border shadow-md flex items-center px-3 transition-all duration-300 cursor-pointer",
+                      "absolute top-0 rounded-md border shadow-md flex items-center px-3 transition-all duration-300 cursor-pointer",
                       statusConfig[item.status].color,
-                      (isExpanded || isHovered) ? "h-12 -top-1 shadow-lg z-20" : ""
-                    )} 
-                    style={style}
+                      (isExpanded || isHovered) ? "shadow-lg z-20" : ""
+                    )}
+                    style={{
+                      ...style,
+                      minHeight: `${itemHeight}px`,
+                      height: isExpanded ? 'auto' : `${itemHeight}px`,
+                      transition: 'all 0.3s ease'
+                    }}
                     onClick={() => toggleItemExpand(item.id)}
                     onMouseEnter={() => setHoveredItem(item.id)}
                     onMouseLeave={() => setHoveredItem(null)}
@@ -286,11 +314,14 @@ const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
                     </div>
                   </div>
                   
-                  {/* Expanded view */}
+                  {/* Expanded view with better sizing */}
                   {isExpanded && (
                     <div 
-                      className="absolute top-12 left-0 right-0 bg-card p-3 rounded-md border border-border shadow-lg z-20 animate-fade-in"
-                      style={style}
+                      className="absolute top-full left-0 right-0 bg-card p-3 rounded-md border border-border shadow-lg z-20 animate-fade-in mt-1"
+                      style={{
+                        ...style,
+                        ...getExpandedItemStyle(item)
+                      }}
                     >
                       <div className="text-sm font-medium mb-1">{item.title}</div>
                       <div className="text-xs text-muted-foreground flex items-center mb-1">
