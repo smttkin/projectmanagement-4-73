@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { AlertCircle, CheckCircle, Clock, ChevronDown, ChevronUp, Calendar, ArrowRight } from 'lucide-react';
@@ -90,33 +91,6 @@ const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
   
   const weeks = groupDatesByWeek();
   
-  // Calculate position and width for timeline items
-  const getItemStyle = (item: TimelineItem) => {
-    const firstDate = dateRange[0];
-    const lastDate = dateRange[dateRange.length - 1];
-    const totalDays = dateRange.length;
-    
-    // Ensure dates are within range
-    const effectiveStartDate = isBefore(item.startDate, firstDate) ? firstDate : item.startDate;
-    const effectiveEndDate = isAfter(item.endDate, lastDate) ? lastDate : item.endDate;
-    
-    // Calculate position percentages
-    const startOffset = Math.max(0, Math.floor(
-      ((effectiveStartDate.getTime() - firstDate.getTime()) / (86400000)) / totalDays * 100
-    ));
-    
-    const endOffset = Math.min(100, Math.ceil(
-      ((effectiveEndDate.getTime() - firstDate.getTime()) / (86400000) + 1) / totalDays * 100
-    ));
-    
-    const width = endOffset - startOffset;
-    
-    return {
-      left: `${startOffset}%`,
-      width: `${width}%`,
-    };
-  };
-  
   // Check if a date is today
   const isToday = (date: Date) => {
     const today = new Date();
@@ -182,14 +156,6 @@ const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
     return baseHeight + titleHeight + assigneeHeight;
   };
   
-  // Get expanded item style for better visualization
-  const getExpandedItemStyle = (item: TimelineItem) => {
-    return {
-      maxHeight: '120px', // Limit maximum height for expanded items
-      overflow: 'auto'
-    };
-  };
-  
   return (
     <div className="timeline-container relative overflow-x-auto">
       <div className="min-w-[800px]">
@@ -237,7 +203,7 @@ const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
           ))}
         </div>
         
-        {/* Timeline items - with enhanced height handling */}
+        {/* Timeline rows */}
         <div className="relative pt-4 pb-4">
           {/* Background grid */}
           <div className="absolute top-0 left-0 right-0 bottom-0 flex">
@@ -257,43 +223,46 @@ const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
             ))}
           </div>
           
-          {/* Timeline bars with adaptive heights */}
+          {/* Timeline rows for each item */}
           <div className="space-y-4 relative z-10">
             {items.map((item) => {
-              const style = getItemStyle(item);
               const StatusIcon = statusConfig[item.status].icon;
               const isExpanded = expandedItem === item.id;
               const isHovered = hoveredItem === item.id;
               const itemHeight = getItemHeight(item);
               
+              // Create a grid for this row
               return (
-                <div key={item.id} className="relative" style={{ minHeight: `${itemHeight}px` }}>
+                <div 
+                  key={item.id} 
+                  className={cn(
+                    "relative grid grid-cols-1 min-h-[40px] rounded-md transition-all duration-200 shadow-sm hover:shadow-md group",
+                    isExpanded ? "shadow-md" : "",
+                    statusConfig[item.status].color
+                  )}
+                  style={{ minHeight: `${itemHeight}px` }}
+                >
+                  {/* Main row content */}
                   <div 
-                    className={cn(
-                      "absolute top-0 rounded-md border shadow-md flex items-center px-3 transition-all duration-300 cursor-pointer",
-                      statusConfig[item.status].color,
-                      (isExpanded || isHovered) ? "shadow-lg z-20" : ""
-                    )}
-                    style={{
-                      ...style,
-                      minHeight: `${itemHeight}px`,
-                      height: isExpanded ? 'auto' : `${itemHeight}px`,
-                      transition: 'all 0.3s ease'
-                    }}
+                    className="flex items-center justify-between px-4 py-2 cursor-pointer"
                     onClick={() => toggleItemExpand(item.id)}
                     onMouseEnter={() => setHoveredItem(item.id)}
                     onMouseLeave={() => setHoveredItem(null)}
                   >
-                    <div className="flex items-center justify-between w-full overflow-hidden whitespace-nowrap">
-                      <div className="flex items-center space-x-2 overflow-hidden">
-                        <StatusIcon size={16} className="shrink-0 animate-pulse" />
-                        <span className="font-medium text-xs overflow-hidden text-ellipsis text-white">
-                          {item.title}
-                        </span>
+                    <div className="flex items-center space-x-2 overflow-hidden">
+                      <StatusIcon size={16} className="shrink-0 text-white" />
+                      <span className="font-medium text-xs overflow-hidden text-ellipsis text-white">
+                        {item.title}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <div className="text-xs text-white/80 hidden sm:block">
+                        {format(item.startDate, 'MMM d')} - {format(item.endDate, 'MMM d')}
                       </div>
                       
                       {item.assignee && (
-                        <div className="h-6 w-6 rounded-full bg-white/80 overflow-hidden flex-shrink-0 ml-2 border border-white/90 hover:scale-110 transition-transform">
+                        <div className="h-6 w-6 rounded-full bg-white/80 overflow-hidden flex-shrink-0 border border-white/90 hover:scale-110 transition-transform">
                           {item.assignee.avatar ? (
                             <img 
                               src={item.assignee.avatar} 
@@ -308,21 +277,15 @@ const TimelineDisplay: React.FC<TimelineDisplayProps> = ({
                         </div>
                       )}
                       
-                      <div className={cn("ml-1", isExpanded ? "rotate-180" : "")}>
-                        <ChevronDown size={14} className="text-white/90" />
+                      <div className={cn("text-white/90", isExpanded ? "rotate-180" : "")}>
+                        <ChevronDown size={14} />
                       </div>
                     </div>
                   </div>
                   
-                  {/* Expanded view with better sizing */}
+                  {/* Expanded details */}
                   {isExpanded && (
-                    <div 
-                      className="absolute top-full left-0 right-0 bg-card p-3 rounded-md border border-border shadow-lg z-20 animate-fade-in mt-1"
-                      style={{
-                        ...style,
-                        ...getExpandedItemStyle(item)
-                      }}
-                    >
+                    <div className="bg-card p-3 rounded-b-md border-t border-white/10 animate-fade-in">
                       <div className="text-sm font-medium mb-1">{item.title}</div>
                       <div className="text-xs text-muted-foreground flex items-center mb-1">
                         <Calendar className="h-3 w-3 mr-1" />
